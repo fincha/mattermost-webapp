@@ -488,9 +488,8 @@ exports[`plugins/MainMenuActions should match snapshot and click plugin item for
           id="someplugin_pluginrightmenuitem"
           onClick={[MockFunction]}
         >
-          <i
-            className="icon fa fa-plus-square"
-            title="Add Icon"
+          <span
+            className="icon"
           />
           some plugin text
         </a>
