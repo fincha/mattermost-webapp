@@ -279,6 +279,12 @@ export default {
                             ],
                         },
                         {
+                            type: Constants.SettingsTypes.TYPE_BOOL,
+                            key: 'ServiceSettings.ViewArchivedChannels',
+                            label: 'admin.viewArchivedChannelsTitle',
+                            label_default: 'View archived channels',
+                        },
+                        {
                             type: Constants.SettingsTypes.TYPE_BUTTON,
                             action: reloadConfig,
                             key: 'ReloadConfigButton',
