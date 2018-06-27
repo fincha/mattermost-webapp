@@ -647,7 +647,7 @@ export default class CreatePost extends React.Component {
             e.persist();
             setTimeout(() => {
                 this.postMsgKeyPress(e);
-            }, 0);
+            }, 15);
         } else if (upKeyOnly && messageIsEmpty) {
             this.editLastPost(e);
         } else if (shiftUpKeyCombo && messageIsEmpty) {
