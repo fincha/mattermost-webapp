@@ -606,9 +606,9 @@ export default class LoginController extends React.Component {
         if (samlSigninEnabled) {
             loginControls.push(
                 <a
-                    className="btn btn-custom-login saml"
-                    key="saml"
-                    href={'/login/sso/saml' + this.props.location.search}
+                    className='btn btn-custom-login saml'
+                    key='saml'
+                    href={Client4.getUrl() + '/login/sso/saml' + this.props.location.search}
                 >
                     <span>
                         <span className="icon fa fa-lock fa--margin-top" title="Saml icon" />
