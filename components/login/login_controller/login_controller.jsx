@@ -26,6 +26,7 @@ import logoImage from 'images/logo.png';
 import SiteNameAndDescription from 'components/common/site_name_and_description';
 import AnnouncementBar from 'components/announcement_bar';
 import FormError from 'components/form_error.jsx';
+import BackButton from 'components/common/back_button.jsx';
 
 import LoginMfa from '../login_mfa.jsx';
 export default class LoginController extends React.Component {
@@ -640,14 +641,26 @@ export default class LoginController extends React.Component {
         );
     }
 
+    hideMfa = () => {
+        this.setState({showMfa: false});
+    }
+
     render() {
         const { customDescriptionText, siteName } = this.props;
 
         let content;
         let customContent;
         let customClass;
+        let backButton;
         if (this.state.showMfa) {
-            content = <LoginMfa loginId={this.state.loginId} password={this.state.password} submit={this.submit} />;
+            content = (
+                <LoginMfa
+                    loginId={this.state.loginId}
+                    password={this.state.password}
+                    submit={this.submit}
+                />
+            );
+            backButton = (<BackButton onClick={this.hideMfa}/>);
         } else {
             content = this.createLoginOptions();
             customContent = this.createCustomLogin();
@@ -658,8 +671,9 @@ export default class LoginController extends React.Component {
 
         return (
             <div>
-                <AnnouncementBar />
-                <div className="col-sm-12">
+                <AnnouncementBar/>
+                {backButton}
+                <div className='col-sm-12'>
                     <div className={'signup-team__container ' + customClass}>
                         <div className="signup__markdown">{customContent}</div>
                         <img className="signup-team-logo" src={logoImage} />
