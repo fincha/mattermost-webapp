@@ -438,10 +438,10 @@ export default class SidebarRightMenu extends React.Component {
         if (this.props.helpLink) {
             helpLink = (
                 <li>
-                    <Link
+                    <a
                         target='_blank'
                         rel='noopener noreferrer'
-                        to={this.props.helpLink}
+                        href={useSafeUrl(this.props.helpLink)}
                     >
                         <i
                             className='icon fa fa-question'
@@ -451,7 +451,7 @@ export default class SidebarRightMenu extends React.Component {
                             id='sidebar_right_menu.help'
                             defaultMessage='Help'
                         />
-                    </Link>
+                    </a>
                 </li>
             );
         }
@@ -460,10 +460,10 @@ export default class SidebarRightMenu extends React.Component {
         if (this.props.reportAProblemLink) {
             reportLink = (
                 <li>
-                    <Link
+                    <a
                         target='_blank'
                         rel='noopener noreferrer'
-                        to={this.props.reportAProblemLink}
+                        href={useSafeUrl(this.props.reportAProblemLink)}
                     >
                         <i
                             className='icon fa fa-phone'
@@ -473,7 +473,7 @@ export default class SidebarRightMenu extends React.Component {
                             id='sidebar_right_menu.report'
                             defaultMessage='Report a Problem'
                         />
-                    </Link>
+                    </a>
                 </li>
             );
         }
@@ -488,10 +488,10 @@ export default class SidebarRightMenu extends React.Component {
         if (this.props.appDownloadLink && !UserAgent.isMobileApp()) {
             nativeAppLink = (
                 <li>
-                    <Link
+                    <a
                         target='_blank'
                         rel='noopener noreferrer'
-                        to={useSafeUrl(this.props.appDownloadLink)}
+                        href={useSafeUrl(this.props.appDownloadLink)}
                     >
                         <i
                             className='icon fa fa-mobile'
@@ -501,7 +501,7 @@ export default class SidebarRightMenu extends React.Component {
                             id='sidebar_right_menu.nativeApps'
                             defaultMessage='Download Apps'
                         />
-                    </Link>
+                    </a>
                 </li>
             );
         }
