@@ -83,6 +83,9 @@ const MEBIBYTE = Math.pow(1024, 2);
 //
 // Dropdown Widget (extends from Setting Widget)
 //   - options: List of options of the dropdown (each options has value, display_name, display_name_default and optionally help_text, help_text_default, help_text_values, help_text_markdown fields).
+//
+// Permissions Flag (extends from Setting Widget)
+//   - permissions_mapping_name: A permission name in the utils/policy_roles_adapter.js file.
 
 export const needsUtils = {
     not: (func) => (config, state, license) => !func(config, state, license),
@@ -106,7 +109,7 @@ export const needsUtils = {
     stateValueEqual: (key, value) => (config, state) => state[key] === value,
     stateValueTrue: (key) => (config, state) => Boolean(state[key]),
     stateValueFalse: (key) => (config, state) => !state[key],
-    hasLicense: (config, state, license) => license.IsLicensed,
+    hasLicense: (config, state, license) => license.IsLicensed === 'true',
     hasLicenseFeature: (feature) => (config, state, license) => license.IsLicensed && license[feature] === 'true',
 };
 
