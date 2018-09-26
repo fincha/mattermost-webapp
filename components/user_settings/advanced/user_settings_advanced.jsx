@@ -5,7 +5,8 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import {FormattedMessage} from 'react-intl';
 
-import {savePreferences} from 'actions/user_actions.jsx';
+import {savePreferences, updateActive, revokeAllSessions} from 'actions/user_actions.jsx';
+import {emitUserLoggedOutEvent} from 'actions/global_actions.jsx';
 import PreferenceStore from 'stores/preference_store.jsx';
 import UserStore from 'stores/user_store.jsx';
 import Constants from 'utils/constants.jsx';
@@ -135,6 +136,40 @@ export default class AdvancedSettingsDisplay extends React.Component {
                 this.handleUpdateSection('');
             }
         );
+    }
+
+    handleDeactivateAccountSubmit = () => {
+        const userId = UserStore.getCurrentId();
+
+        this.setState({isSaving: true});
+
+        updateActive(userId, false,
+            null,
+            (err) => {
+                this.setState({serverError: err.message});
+            }
+        );
+
+        revokeAllSessions(userId,
+            () => {
+                emitUserLoggedOutEvent();
+            },
+            (err) => {
+                this.setState({serverError: err.message});
+            }
+        );
+    }
+
+    handleShowDeactivateAccountModal = () => {
+        this.setState({
+            showDeactivateAccountModal: true,
+        });
+    }
+
+    handleHideDeactivateAccountModal = () => {
+        this.setState({
+            showDeactivateAccountModal: false,
+        });
     }
 
     handleUpdateSection = (section) => {
