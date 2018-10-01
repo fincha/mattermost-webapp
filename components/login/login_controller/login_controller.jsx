@@ -29,6 +29,7 @@ import AnnouncementBar from 'components/announcement_bar';
 import FormError from 'components/form_error.jsx';
 import FormattedMarkdownMessage from 'components/formatted_markdown_message.jsx';
 import BackButton from 'components/common/back_button.jsx';
+import LoadingScreen from 'components/loading_screen.jsx';
 
 import LoginMfa from '../login_mfa.jsx';
 class LoginController extends React.Component {
@@ -55,6 +56,7 @@ class LoginController extends React.Component {
             ldapLoginFieldName: PropTypes.string,
             samlLoginButtonText: PropTypes.string,
             siteName: PropTypes.string,
+            initializing: PropTypes.bool,
         };
     }
 
@@ -796,7 +798,15 @@ class LoginController extends React.Component {
     }
 
     render() {
-        const { customDescriptionText, siteName } = this.props;
+        const {
+            customDescriptionText,
+            siteName,
+            initializing,
+        } = this.props;
+
+        if (initializing) {
+            return (<LoadingScreen/>);
+        }
 
         let content;
         let customContent;
