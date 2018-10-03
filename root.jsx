@@ -5,9 +5,9 @@ import './entry.js';
 
 import React from 'react';
 import ReactDOM from 'react-dom';
-import {Provider} from 'react-redux';
-import {Router, Route} from 'react-router-dom';
-import {getConfig} from 'mattermost-redux/selectors/entities/general';
+import { Provider } from 'react-redux';
+import { Router, Route } from 'react-router-dom';
+import { getConfig } from 'mattermost-redux/selectors/entities/general';
 import PDFJS from 'pdfjs-dist';
 import smoothscroll from 'smoothscroll-polyfill';
 
@@ -18,8 +18,8 @@ import 'bootstrap-colorpicker/dist/css/bootstrap-colorpicker.css';
 import 'sass/styles.scss';
 import 'katex/dist/katex.min.css';
 
-import {browserHistory} from 'utils/browser_history';
-import {makeAsyncComponent} from 'components/async_load';
+import { browserHistory } from 'utils/browser_history';
+import { makeAsyncComponent } from 'components/async_load';
 import store from 'stores/redux_store.jsx';
 import loadRoot from 'bundle-loader?lazy!components/root';
 
@@ -43,7 +43,7 @@ function preRenderSetup(callwhendone) {
         const state = store.getState();
         const config = getConfig(state);
         if (config.EnableDeveloper === 'true') {
-            window.ErrorStore.storeLastError({type: 'developer', message: 'DEVELOPER MODE: A JavaScript error has occurred.  Please use the JavaScript console to capture and report the error (row: ' + line + ' col: ' + column + ').'});
+            window.ErrorStore.storeLastError({ type: 'developer', message: 'DEVELOPER MODE: A JavaScript error has occurred.  Please use the JavaScript console to capture and report the error (row: ' + line + ' col: ' + column + ').' });
             window.ErrorStore.emitChange();
         }
     };
@@ -51,6 +51,44 @@ function preRenderSetup(callwhendone) {
 }
 
 function renderRootComponent() {
+
+    let getCookie = (name) => {
+        var nameEQ = name + '=';
+        var ca = document.cookie.split(';');
+
+        for (var i = 0; i < ca.length; i++) {
+            var c = ca[i];
+            while (c.charAt(0) == ' ') {
+                c = c.substring(1, c.length);
+            }
+            if (c.indexOf(nameEQ) == 0) {
+                return c.substring(nameEQ.length, c.length);
+            }
+        }
+        return null;
+    };
+
+    let setCookie = (name, value, days) => {
+        var expires = '';
+        if (days) {
+            var date = new Date();
+            date.setTime(date.getTime() + days * 1000);
+            expires = '; expires=' + date.toUTCString();
+        }
+        document.cookie = name + '=' + (value || '') + expires + '; path=/';
+    }
+
+    if (getCookie('MMUSERID') && getCookie('chatlogin')) {
+        setCookie('closeme', true, 5);
+
+        setInterval(() => {
+            if (getCookie('closed')) {
+                window.close();
+            }
+        }, 500)
+    }
+
+
     ReactDOM.render((
         <Provider store={store}>
             <Router history={browserHistory}>
@@ -61,7 +99,7 @@ function renderRootComponent() {
             </Router>
         </Provider>
     ),
-    document.getElementById('root'));
+        document.getElementById('root'));
 }
 
 /**

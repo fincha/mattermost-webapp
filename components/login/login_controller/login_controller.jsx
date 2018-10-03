@@ -3,19 +3,19 @@
 
 import PropTypes from 'prop-types';
 import React from 'react';
-import {FormattedMessage} from 'react-intl';
-import {Link} from 'react-router-dom';
+import { FormattedMessage } from 'react-intl';
+import { Link } from 'react-router-dom';
 
-import {Client4} from 'mattermost-redux/client';
+import { Client4 } from 'mattermost-redux/client';
 
 import * as GlobalActions from 'actions/global_actions.jsx';
-import {addUserToTeamFromInvite} from 'actions/team_actions.jsx';
-import {checkMfa, webLogin} from 'actions/user_actions.jsx';
+import { addUserToTeamFromInvite } from 'actions/team_actions.jsx';
+import { checkMfa, webLogin } from 'actions/user_actions.jsx';
 import BrowserStore from 'stores/browser_store.jsx';
 import UserStore from 'stores/user_store.jsx';
 import TeamStore from 'stores/team_store.jsx';
 
-import {browserHistory} from 'utils/browser_history';
+import { browserHistory } from 'utils/browser_history';
 import Constants from 'utils/constants.jsx';
 import messageHtmlToComponent from 'utils/message_html_to_component';
 import * as TextFormatting from 'utils/text_formatting.jsx';
@@ -59,13 +59,17 @@ export default class LoginController extends React.Component {
         this.preSubmit = this.preSubmit.bind(this);
         this.submit = this.submit.bind(this);
         this.finishSignin = this.finishSignin.bind(this);
+        this.startPolling = this.startPolling.bind(this);
 
         this.handleLoginIdChange = this.handleLoginIdChange.bind(this);
         this.handlePasswordChange = this.handlePasswordChange.bind(this);
 
         let loginId = '';
-        if ((new URLSearchParams(this.props.location.search)).get('extra') === Constants.SIGNIN_VERIFIED && (new URLSearchParams(this.props.location.search)).get('email')) {
-            loginId = (new URLSearchParams(this.props.location.search)).get('email');
+        if (
+            new URLSearchParams(this.props.location.search).get('extra') === Constants.SIGNIN_VERIFIED &&
+            new URLSearchParams(this.props.location.search).get('email')
+        ) {
+            loginId = new URLSearchParams(this.props.location.search).get('email');
         }
 
         this.state = {
@@ -87,7 +91,10 @@ export default class LoginController extends React.Component {
             GlobalActions.redirectUserToDefaultTeam();
         }
 
-        if ((new URLSearchParams(this.props.location.search)).get('extra') === Constants.SIGNIN_VERIFIED && (new URLSearchParams(this.props.location.search)).get('email')) {
+        if (
+            new URLSearchParams(this.props.location.search).get('extra') === Constants.SIGNIN_VERIFIED &&
+            new URLSearchParams(this.props.location.search).get('email')
+        ) {
             this.refs.password.focus();
         }
     }
@@ -95,7 +102,7 @@ export default class LoginController extends React.Component {
     preSubmit(e) {
         e.preventDefault();
 
-        const {location} = this.props;
+        const { location } = this.props;
         const newQuery = location.search.replace(/(extra=password_change)&?/i, '');
         if (newQuery !== location.search) {
             browserHistory.replace(`${location.pathname}${newQuery}${location.hash}`);
@@ -105,12 +112,12 @@ export default class LoginController extends React.Component {
         // for the state to get out of sync with what the user sees in the browser
         let loginId = this.refs.loginId.value;
         if (loginId !== this.state.loginId) {
-            this.setState({loginId});
+            this.setState({ loginId });
         }
 
         const password = this.refs.password.value;
         if (password !== this.state.password) {
-            this.setState({password});
+            this.setState({ password });
         }
 
         // don't trim the password since we support spaces in passwords
@@ -134,7 +141,9 @@ export default class LoginController extends React.Component {
                     <FormattedMessage
                         id={msgId}
                         values={{
-                            ldapUsername: this.props.ldapLoginFieldName || Utils.localizeMessage('login.ldapUsernameLower', 'AD/LDAP username'),
+                            ldapUsername:
+                                this.props.ldapLoginFieldName ||
+                                Utils.localizeMessage('login.ldapUsernameLower', 'AD/LDAP username'),
                         }}
                     />
                 ),
@@ -144,33 +153,28 @@ export default class LoginController extends React.Component {
 
         if (!password) {
             this.setState({
-                serverError: (
-                    <FormattedMessage
-                        id='login.noPassword'
-                        defaultMessage='Please enter your password'
-                    />
-                ),
+                serverError: <FormattedMessage id="login.noPassword" defaultMessage="Please enter your password" />,
             });
             return;
         }
 
         checkMfa(
             loginId,
-            (requiresMfa) => {
+            requiresMfa => {
                 if (requiresMfa) {
-                    this.setState({showMfa: true});
+                    this.setState({ showMfa: true });
                 } else {
                     this.submit(loginId, password, '');
                 }
             },
-            (err) => {
-                this.setState({serverError: err.message});
+            err => {
+                this.setState({ serverError: err.message });
             }
         );
     }
 
     submit(loginId, password, token) {
-        this.setState({serverError: null, loading: true});
+        this.setState({ serverError: null, loading: true });
 
         webLogin(
             loginId,
@@ -186,7 +190,7 @@ export default class LoginController extends React.Component {
                     addUserToTeamFromInvite(
                         inviteToken,
                         inviteId,
-                        (team) => {
+                        team => {
                             this.finishSignin(team);
                         },
                         () => {
@@ -200,34 +204,36 @@ export default class LoginController extends React.Component {
 
                 this.finishSignin();
             },
-            (err) => {
+            err => {
                 if (err.id === 'api.user.login.not_verified.app_error') {
                     browserHistory.push('/should_verify_email?&email=' + encodeURIComponent(loginId));
-                } else if (err.id === 'store.sql_user.get_for_login.app_error' ||
-                    err.id === 'ent.ldap.do_login.user_not_registered.app_error') {
+                } else if (
+                    err.id === 'store.sql_user.get_for_login.app_error' ||
+                    err.id === 'ent.ldap.do_login.user_not_registered.app_error'
+                ) {
                     this.setState({
                         showMfa: false,
                         loading: false,
                         serverError: (
                             <FormattedMessage
-                                id='login.userNotFound'
+                                id="login.userNotFound"
                                 defaultMessage="We couldn't find an account matching your login credentials."
                             />
                         ),
                     });
-                } else if (err.id === 'api.user.check_user_password.invalid.app_error' || err.id === 'ent.ldap.do_login.invalid_password.app_error') {
+                } else if (
+                    err.id === 'api.user.check_user_password.invalid.app_error' ||
+                    err.id === 'ent.ldap.do_login.invalid_password.app_error'
+                ) {
                     this.setState({
                         showMfa: false,
                         loading: false,
                         serverError: (
-                            <FormattedMessage
-                                id='login.invalidPassword'
-                                defaultMessage='Your password is incorrect.'
-                            />
+                            <FormattedMessage id="login.invalidPassword" defaultMessage="Your password is incorrect." />
                         ),
                     });
                 } else {
-                    this.setState({showMfa: false, serverError: err.message, loading: false});
+                    this.setState({ showMfa: false, serverError: err.message, loading: false });
                 }
             }
         );
@@ -270,12 +276,8 @@ export default class LoginController extends React.Component {
 
             return (
                 <div>
-                    <img
-                        src={Client4.getBrandImageUrl(0)}
-                    />
-                    <div>
-                        {messageHtmlToComponent(formattedText, false, {mentions: false})}
-                    </div>
+                    <img src={Client4.getBrandImageUrl(0)} />
+                    <div>{messageHtmlToComponent(formattedText, false, { mentions: false })}</div>
                 </div>
             );
         }
@@ -306,9 +308,11 @@ export default class LoginController extends React.Component {
         }
 
         if (loginPlaceholders.length >= 2) {
-            return loginPlaceholders.slice(0, loginPlaceholders.length - 1).join(', ') +
+            return (
+                loginPlaceholders.slice(0, loginPlaceholders.length - 1).join(', ') +
                 Utils.localizeMessage('login.placeholderOr', ' or ') +
-                loginPlaceholders[loginPlaceholders.length - 1];
+                loginPlaceholders[loginPlaceholders.length - 1]
+            );
         } else if (loginPlaceholders.length === 1) {
             return loginPlaceholders[0];
         }
@@ -316,69 +320,116 @@ export default class LoginController extends React.Component {
         return '';
     }
 
+    inIframe() {
+        try {
+            return window.self !== window.top;
+        } catch (e) {
+            return true;
+        }
+    }
+
+    setCookie(name, value, days) {
+        var expires = '';
+        if (days) {
+            var date = new Date();
+            date.setTime(date.getTime() + days * 1000);
+            expires = '; expires=' + date.toUTCString();
+        }
+        document.cookie = name + '=' + (value || '') + expires + '; path=/';
+    }
+
+    getCookie(name) {
+        var nameEQ = name + '=';
+        var ca = document.cookie.split(';');
+
+        for (var i = 0; i < ca.length; i++) {
+            var c = ca[i];
+            while (c.charAt(0) == ' ') {
+                c = c.substring(1, c.length);
+            }
+            if (c.indexOf(nameEQ) == 0) {
+                return c.substring(nameEQ.length, c.length);
+            }
+        }
+        return null;
+    }
+
+    eraseCookie(name) {
+        document.cookie = name + '=; Max-Age=-99999999;';
+    }
+
+    startPolling(e) {
+        if (this.inIframe()) {
+            e.preventDefault();
+            var win = window.open(Client4.getOAuthRoute() + '/office365/login' + this.props.location.search, '_blank');
+            win.focus();
+
+            this.setCookie('chatlogin', true, 120);
+            setInterval(() => {
+                if (this.getCookie('closeme')) {
+                    this.setCookie('closed', true, 10)
+                    window.location.reload();
+                }
+            }, 500);
+        }
+    }
+
     checkSignUpEnabled() {
-        return this.props.enableSignUpWithEmail ||
+        return (
+            this.props.enableSignUpWithEmail ||
             this.props.enableSignUpWithGitLab ||
             this.props.enableSignUpWithOffice365 ||
             this.props.enableSignUpWithGoogle ||
             this.props.enableLdap ||
-            this.props.enableSaml;
+            this.props.enableSaml
+        );
     }
 
     createLoginOptions() {
-        const extraParam = (new URLSearchParams(this.props.location.search)).get('extra');
+        const extraParam = new URLSearchParams(this.props.location.search).get('extra');
         let extraBox = '';
         if (extraParam) {
             if (extraParam === Constants.SIGNIN_CHANGE) {
                 extraBox = (
-                    <div className='alert alert-success'>
+                    <div className="alert alert-success">
                         <i
-                            className='fa fa-check'
+                            className="fa fa-check"
                             title={Utils.localizeMessage('generic_icons.success', 'Success Icon')}
                         />
-                        <FormattedMessage
-                            id='login.changed'
-                            defaultMessage=' Sign-in method changed successfully'
-                        />
+                        <FormattedMessage id="login.changed" defaultMessage=" Sign-in method changed successfully" />
                     </div>
                 );
             } else if (extraParam === Constants.SIGNIN_VERIFIED) {
                 extraBox = (
-                    <div className='alert alert-success'>
+                    <div className="alert alert-success">
                         <i
-                            className='fa fa-check'
+                            className="fa fa-check"
                             title={Utils.localizeMessage('generic_icons.success', 'Success Icon')}
                         />
-                        <FormattedMessage
-                            id='login.verified'
-                            defaultMessage=' Email Verified'
-                        />
+                        <FormattedMessage id="login.verified" defaultMessage=" Email Verified" />
                     </div>
                 );
             } else if (extraParam === Constants.SESSION_EXPIRED) {
                 extraBox = (
-                    <div className='alert alert-warning'>
+                    <div className="alert alert-warning">
                         <i
-                            className='fa fa-exclamation-triangle'
+                            className="fa fa-exclamation-triangle"
                             title={Utils.localizeMessage('generic_icons.warning', 'Warning Icon')}
                         />
                         <FormattedMessage
-                            id='login.session_expired'
-                            defaultMessage=' Your session has expired. Please login again.'
+                            id="login.session_expired"
+                            defaultMessage=" Your session has expired. Please login again."
                         />
                     </div>
                 );
             } else if (extraParam === Constants.PASSWORD_CHANGE) {
                 extraBox = (
-                    <div className='alert alert-success'>
+                    <div className="alert alert-success">
                         <i
-                            className='fa fa-check'
+                            className="fa fa-check"
                             title={Utils.localizeMessage('generic_icons.success', 'Success Icon')}
                         />
-                        <FormattedMessage
-                            id='login.passwordChanged'
-                            defaultMessage=' Password updated successfully'
-                        />
+                        <FormattedMessage id="login.passwordChanged" defaultMessage=" Password updated successfully" />
                     </div>
                 );
             }
@@ -400,71 +451,54 @@ export default class LoginController extends React.Component {
                 errorClass = ' has-error';
             }
 
-            let loginButton = (
-                <FormattedMessage
-                    id='login.signIn'
-                    defaultMessage='Sign in'
-                />
-            );
+            let loginButton = <FormattedMessage id="login.signIn" defaultMessage="Sign in" />;
 
             if (this.state.loading) {
-                loginButton =
-                (<span>
-                    <span
-                        className='fa fa-refresh icon--rotate'
-                        title={Utils.localizeMessage('generic_icons.loading', 'Loading Icon')}
-                    />
-                    <FormattedMessage
-                        id='login.signInLoading'
-                        defaultMessage='Signing in...'
-                    />
-                </span>);
+                loginButton = (
+                    <span>
+                        <span
+                            className="fa fa-refresh icon--rotate"
+                            title={Utils.localizeMessage('generic_icons.loading', 'Loading Icon')}
+                        />
+                        <FormattedMessage id="login.signInLoading" defaultMessage="Signing in..." />
+                    </span>
+                );
             }
 
             loginControls.push(
-                <form
-                    key='loginBoxes'
-                    onSubmit={this.preSubmit}
-                >
-                    <div className='signup__email-container'>
-                        <FormError
-                            error={this.state.serverError}
-                            margin={true}
-                        />
+                <form key="loginBoxes" onSubmit={this.preSubmit}>
+                    <div className="signup__email-container">
+                        <FormError error={this.state.serverError} margin={true} />
                         <div className={'form-group' + errorClass}>
                             <input
-                                id='loginId'
-                                className='form-control'
-                                ref='loginId'
-                                name='loginId'
+                                id="loginId"
+                                className="form-control"
+                                ref="loginId"
+                                name="loginId"
                                 value={this.state.loginId}
                                 onChange={this.handleLoginIdChange}
                                 placeholder={this.createLoginPlaceholder()}
-                                spellCheck='false'
-                                autoCapitalize='off'
-                                autoFocus='true'
+                                spellCheck="false"
+                                autoCapitalize="off"
+                                autoFocus="true"
                             />
                         </div>
                         <div className={'form-group' + errorClass}>
                             <input
-                                id='loginPassword'
-                                type='password'
-                                className='form-control'
-                                ref='password'
-                                name='password'
+                                id="loginPassword"
+                                type="password"
+                                className="form-control"
+                                ref="password"
+                                name="password"
                                 value={this.state.password}
                                 onChange={this.handlePasswordChange}
                                 placeholder={Utils.localizeMessage('login.password', 'Password')}
-                                spellCheck='false'
+                                spellCheck="false"
                             />
                         </div>
-                        <div className='form-group'>
-                            <button
-                                id='loginButton'
-                                type='submit'
-                                className='btn btn-primary'
-                            >
-                                { loginButton }
+                        <div className="form-group">
+                            <button id="loginButton" type="submit" className="btn btn-primary">
+                                {loginButton}
                             </button>
                         </div>
                     </div>
@@ -474,24 +508,15 @@ export default class LoginController extends React.Component {
 
         if (this.props.enableOpenServer && this.checkSignUpEnabled()) {
             loginControls.push(
-                <div
-                    className='form-group'
-                    key='signup'
-                >
+                <div className="form-group" key="signup">
                     <span>
-                        <FormattedMessage
-                            id='login.noAccount'
-                            defaultMessage="Don't have an account? "
-                        />
+                        <FormattedMessage id="login.noAccount" defaultMessage="Don't have an account? " />
                         <Link
-                            id='signup'
+                            id="signup"
                             to={'/signup_user_complete' + this.props.location.search}
-                            className='signup-team-login'
+                            className="signup-team-login"
                         >
-                            <FormattedMessage
-                                id='login.create'
-                                defaultMessage='Create one now'
-                            />
+                            <FormattedMessage id="login.create" defaultMessage="Create one now" />
                         </Link>
                     </span>
                 </div>
@@ -500,39 +525,27 @@ export default class LoginController extends React.Component {
 
         if (usernameSigninEnabled || emailSigninEnabled) {
             loginControls.push(
-                <div
-                    key='forgotPassword'
-                    className='form-group'
-                >
+                <div key="forgotPassword" className="form-group">
                     <Link to={'/reset_password'}>
-                        <FormattedMessage
-                            id='login.forgot'
-                            defaultMessage='I forgot my password'
-                        />
+                        <FormattedMessage id="login.forgot" defaultMessage="I forgot my password" />
                     </Link>
                 </div>
             );
         }
 
-        if ((emailSigninEnabled || usernameSigninEnabled || ldapEnabled) && (gitlabSigninEnabled || googleSigninEnabled || samlSigninEnabled || office365SigninEnabled)) {
+        if (
+            (emailSigninEnabled || usernameSigninEnabled || ldapEnabled) &&
+            (gitlabSigninEnabled || googleSigninEnabled || samlSigninEnabled || office365SigninEnabled)
+        ) {
             loginControls.push(
-                <div
-                    key='divider'
-                    className='or__container'
-                >
-                    <FormattedMessage
-                        id='login.or'
-                        defaultMessage='or'
-                    />
+                <div key="divider" className="or__container">
+                    <FormattedMessage id="login.or" defaultMessage="or" />
                 </div>
             );
 
             loginControls.push(
-                <h5 key='oauthHeader'>
-                    <FormattedMessage
-                        id='login.signInWith'
-                        defaultMessage='Sign in with:'
-                    />
+                <h5 key="oauthHeader">
+                    <FormattedMessage id="login.signInWith" defaultMessage="Sign in with:" />
                 </h5>
             );
         }
@@ -540,17 +553,14 @@ export default class LoginController extends React.Component {
         if (gitlabSigninEnabled) {
             loginControls.push(
                 <a
-                    className='btn btn-custom-login gitlab'
-                    key='gitlab'
+                    className="btn btn-custom-login gitlab"
+                    key="gitlab"
                     href={Client4.getOAuthRoute() + '/gitlab/login' + this.props.location.search}
                 >
                     <span>
-                        <span className='icon'/>
+                        <span className="icon" />
                         <span>
-                            <FormattedMessage
-                                id='login.gitlab'
-                                defaultMessage='GitLab'
-                            />
+                            <FormattedMessage id="login.gitlab" defaultMessage="GitLab" />
                         </span>
                     </span>
                 </a>
@@ -560,17 +570,14 @@ export default class LoginController extends React.Component {
         if (googleSigninEnabled) {
             loginControls.push(
                 <a
-                    className='btn btn-custom-login google'
-                    key='google'
+                    className="btn btn-custom-login google"
+                    key="google"
                     href={Client4.getOAuthRoute() + '/google/login' + this.props.location.search}
                 >
                     <span>
-                        <span className='icon'/>
+                        <span className="icon" />
                         <span>
-                            <FormattedMessage
-                                id='login.google'
-                                defaultMessage='Google Apps'
-                            />
+                            <FormattedMessage id="login.google" defaultMessage="Google Apps" />
                         </span>
                     </span>
                 </a>
@@ -580,17 +587,16 @@ export default class LoginController extends React.Component {
         if (office365SigninEnabled) {
             loginControls.push(
                 <a
-                    className='btn btn-custom-login office365'
-                    key='office365'
+                    className="btn btn-custom-login office365"
+                    key="office365"
+                    target="_top"
+                    onClick={this.startPolling}
                     href={Client4.getOAuthRoute() + '/office365/login' + this.props.location.search}
                 >
                     <span>
-                        <span className='icon'/>
+                        <span className="icon" />
                         <span>
-                            <FormattedMessage
-                                id='login.office365'
-                                defaultMessage='Office 365'
-                            />
+                            <FormattedMessage id="login.office365" defaultMessage="Office 365" />
                         </span>
                     </span>
                 </a>
@@ -600,18 +606,13 @@ export default class LoginController extends React.Component {
         if (samlSigninEnabled) {
             loginControls.push(
                 <a
-                    className='btn btn-custom-login saml'
-                    key='saml'
+                    className="btn btn-custom-login saml"
+                    key="saml"
                     href={'/login/sso/saml' + this.props.location.search}
                 >
                     <span>
-                        <span
-                            className='icon fa fa-lock fa--margin-top'
-                            title='Saml icon'
-                        />
-                        <span>
-                            {this.props.samlLoginButtonText}
-                        </span>
+                        <span className="icon fa fa-lock fa--margin-top" title="Saml icon" />
+                        <span>{this.props.samlLoginButtonText}</span>
                     </span>
                 </a>
             );
@@ -622,8 +623,8 @@ export default class LoginController extends React.Component {
                 <FormError
                     error={
                         <FormattedMessage
-                            id='login.noMethods'
-                            defaultMessage='No sign-in methods are enabled. Please contact your System Administrator.'
+                            id="login.noMethods"
+                            defaultMessage="No sign-in methods are enabled. Please contact your System Administrator."
                         />
                     }
                     margin={true}
@@ -640,22 +641,13 @@ export default class LoginController extends React.Component {
     }
 
     render() {
-        const {
-            customDescriptionText,
-            siteName,
-        } = this.props;
+        const { customDescriptionText, siteName } = this.props;
 
         let content;
         let customContent;
         let customClass;
         if (this.state.showMfa) {
-            content = (
-                <LoginMfa
-                    loginId={this.state.loginId}
-                    password={this.state.password}
-                    submit={this.submit}
-                />
-            );
+            content = <LoginMfa loginId={this.state.loginId} password={this.state.password} submit={this.submit} />;
         } else {
             content = this.createLoginOptions();
             customContent = this.createCustomLogin();
@@ -666,21 +658,13 @@ export default class LoginController extends React.Component {
 
         return (
             <div>
-                <AnnouncementBar/>
-                <div className='col-sm-12'>
+                <AnnouncementBar />
+                <div className="col-sm-12">
                     <div className={'signup-team__container ' + customClass}>
-                        <div className='signup__markdown'>
-                            {customContent}
-                        </div>
-                        <img
-                            className='signup-team-logo'
-                            src={logoImage}
-                        />
-                        <div className='signup__content'>
-                            <SiteNameAndDescription
-                                customDescriptionText={customDescriptionText}
-                                siteName={siteName}
-                            />
+                        <div className="signup__markdown">{customContent}</div>
+                        <img className="signup-team-logo" src={logoImage} />
+                        <div className="signup__content">
+                            <SiteNameAndDescription customDescriptionText={customDescriptionText} siteName={siteName} />
                             {content}
                         </div>
                     </div>
