@@ -613,9 +613,9 @@ class LoginController extends React.Component {
                                 value={this.state.loginId}
                                 onChange={this.handleLoginIdChange}
                                 placeholder={this.createLoginPlaceholder()}
-                                spellCheck="false"
-                                autoCapitalize="off"
-                                autoFocus="true"
+                                spellCheck='false'
+                                autoCapitalize='off'
+                                autoFocus={true}
                             />
                         </div>
                         <div className={'form-group' + errorClass}>
