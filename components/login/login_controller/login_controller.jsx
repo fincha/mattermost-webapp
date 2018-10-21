@@ -477,10 +477,14 @@ class LoginController extends React.Component {
         this.setState({sessionExpired: false});
     }
 
+    onDismissSessionExpired = () => {
+        LocalStorageStore.setWasLoggedIn(false);
+        this.setState({sessionExpired: false});
+    }
+
     createLoginOptions() {
         const extraParam = new URLSearchParams(this.props.location.search).get('extra');
         let extraBox = '';
-
         if (this.state.sessionExpired) {
             extraBox = (
                 <div className='alert alert-warning'>

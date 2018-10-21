@@ -355,7 +355,6 @@ exports[`plugins/MainMenuActions should match snapshot and click plugin item for
         >
           <i
             className="icon fa fa-flag"
-            title="Flag Icon"
           />
           <FormattedMessage
             defaultMessage="Flagged Posts"
@@ -374,7 +373,6 @@ exports[`plugins/MainMenuActions should match snapshot and click plugin item for
         >
           <i
             className="icon fa fa-cog"
-            title="Settings Icon"
           />
           <FormattedMessage
             defaultMessage="Account Settings"
@@ -462,7 +460,6 @@ exports[`plugins/MainMenuActions should match snapshot and click plugin item for
           >
             <i
               className="icon fa fa-globe"
-              title="Settings Icon"
             />
             <FormattedMessage
               defaultMessage="Team Settings"
@@ -488,7 +485,6 @@ exports[`plugins/MainMenuActions should match snapshot and click plugin item for
           >
             <i
               className="icon fa fa-users"
-              title="Member Icon"
             />
             <FormattedMessage
               defaultMessage="Manage Members"
@@ -596,7 +592,6 @@ exports[`plugins/MainMenuActions should match snapshot and click plugin item for
           >
             <i
               className="icon fa fa-wrench"
-              title="System Console Icon"
             />
             <FormattedMessage
               defaultMessage="System Console"
@@ -616,7 +611,6 @@ exports[`plugins/MainMenuActions should match snapshot and click plugin item for
         >
           <i
             className="icon fa fa-info"
-            title="Info Icon"
           />
           <FormattedMessage
             defaultMessage="About Mattermost"
@@ -635,7 +629,6 @@ exports[`plugins/MainMenuActions should match snapshot and click plugin item for
         >
           <i
             className="icon fa fa-sign-out"
-            title="Logout Icon"
           />
           <FormattedMessage
             defaultMessage="Logout"

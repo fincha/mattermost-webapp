@@ -276,70 +276,58 @@ var config = {
             fingerprints: false,
             orientation: 'any',
             filename: 'manifest.json',
-            icons: [
-                {
-                    src: path.resolve('images/favicon/android-chrome-192x192.png'),
-                    type: 'image/png',
-                    sizes: '192x192',
-                },
-                {
-                    src: path.resolve('images/favicon/apple-touch-icon-120x120.png'),
-                    type: 'image/png',
-                    sizes: '120x120',
-                    ios: true,
-                },
-                {
-                    src: path.resolve('images/favicon/apple-touch-icon-144x144.png'),
-                    type: 'image/png',
-                    sizes: '144x144',
-                    ios: true,
-                },
-                {
-                    src: path.resolve('images/favicon/apple-touch-icon-152x152.png'),
-                    type: 'image/png',
-                    sizes: '152x152',
-                    ios: true,
-                },
-                {
-                    src: path.resolve('images/favicon/apple-touch-icon-57x57.png'),
-                    type: 'image/png',
-                    sizes: '57x57',
-                    ios: true,
-                },
-                {
-                    src: path.resolve('images/favicon/apple-touch-icon-60x60.png'),
-                    type: 'image/png',
-                    sizes: '60x60',
-                    ios: true,
-                },
-                {
-                    src: path.resolve('images/favicon/apple-touch-icon-72x72.png'),
-                    type: 'image/png',
-                    sizes: '72x72',
-                    ios: true,
-                },
-                {
-                    src: path.resolve('images/favicon/apple-touch-icon-76x76.png'),
-                    type: 'image/png',
-                    sizes: '76x76',
-                    ios: true,
-                },
-                {
-                    src: path.resolve('images/favicon/favicon-16x16.png'),
-                    type: 'image/png',
-                    sizes: '16x16',
-                },
-                {
-                    src: path.resolve('images/favicon/favicon-32x32.png'),
-                    type: 'image/png',
-                    sizes: '32x32',
-                },
-                {
-                    src: path.resolve('images/favicon/favicon-96x96.png'),
-                    type: 'image/png',
-                    sizes: '96x96',
-                },
-            ],
+            icons: [{
+                src: path.resolve('images/favicon/android-chrome-192x192.png'),
+                type: 'image/png',
+                sizes: '192x192',
+            }, {
+                src: path.resolve('images/favicon/apple-touch-icon-120x120.png'),
+                type: 'image/png',
+                sizes: '120x120',
+                ios: true,
+            }, {
+                src: path.resolve('images/favicon/apple-touch-icon-144x144.png'),
+                type: 'image/png',
+                sizes: '144x144',
+                ios: true,
+            }, {
+                src: path.resolve('images/favicon/apple-touch-icon-152x152.png'),
+                type: 'image/png',
+                sizes: '152x152',
+                ios: true,
+            }, {
+                src: path.resolve('images/favicon/apple-touch-icon-57x57.png'),
+                type: 'image/png',
+                sizes: '57x57',
+                ios: true,
+            }, {
+                src: path.resolve('images/favicon/apple-touch-icon-60x60.png'),
+                type: 'image/png',
+                sizes: '60x60',
+                ios: true,
+            }, {
+                src: path.resolve('images/favicon/apple-touch-icon-72x72.png'),
+                type: 'image/png',
+                sizes: '72x72',
+                ios: true,
+            }, {
+                src: path.resolve('images/favicon/apple-touch-icon-76x76.png'),
+                type: 'image/png',
+                sizes: '76x76',
+                ios: true,
+            }, {
+                src: path.resolve('images/favicon/favicon-16x16.png'),
+                type: 'image/png',
+                sizes: '16x16',
+            }, {
+                src: path.resolve('images/favicon/favicon-32x32.png'),
+                type: 'image/png',
+                sizes: '32x32',
+            }, {
+                src: path.resolve('images/favicon/favicon-96x96.png'),
+                type: 'image/png',
+                sizes: '96x96',
+            }],
         }),
     ],
 };
