@@ -43,7 +43,15 @@ function preRenderSetup(callwhendone) {
         const state = store.getState();
         const config = getConfig(state);
         if (config.EnableDeveloper === 'true') {
-            window.ErrorStore.storeLastError({ type: 'developer', message: 'DEVELOPER MODE: A JavaScript error has occurred.  Please use the JavaScript console to capture and report the error (row: ' + line + ' col: ' + column + ').' });
+            window.ErrorStore.storeLastError({
+                type: 'developer',
+                message:
+                    'DEVELOPER MODE: A JavaScript error has occurred.  Please use the JavaScript console to capture and report the error (row: ' +
+                    line +
+                    ' col: ' +
+                    column +
+                    ').',
+            });
             window.ErrorStore.emitChange();
         }
     };
@@ -51,8 +59,7 @@ function preRenderSetup(callwhendone) {
 }
 
 function renderRootComponent() {
-
-    let getCookie = (name) => {
+    let getCookie = name => {
         var nameEQ = name + '=';
         var ca = document.cookie.split(';');
 
@@ -76,30 +83,26 @@ function renderRootComponent() {
             expires = '; expires=' + date.toUTCString();
         }
         document.cookie = name + '=' + (value || '') + expires + '; path=/';
-    }
+    };
 
     if (getCookie('MMUSERID') && getCookie('chatlogin')) {
         setCookie('closeme', true, 5);
 
         setInterval(() => {
             if (getCookie('closed')) {
-                window.close();
+                // window.close();
             }
-        }, 500)
+        }, 500);
     }
 
-
-    ReactDOM.render((
+    ReactDOM.render(
         <Provider store={store}>
             <Router history={browserHistory}>
-                <Route
-                    path='/'
-                    component={Root}
-                />
+                <Route path="/" component={Root} />
             </Router>
-        </Provider>
-    ),
-        document.getElementById('root'));
+        </Provider>,
+        document.getElementById('root')
+    );
 }
 
 /**
@@ -114,7 +117,7 @@ function appendOnLoadEvent(fn) {
         window.attachEvent('onload', fn);
     } else if (window.onload) {
         const curronload = window.onload;
-        window.onload = (evt) => {
+        window.onload = evt => {
             curronload(evt);
             fn(evt);
         };

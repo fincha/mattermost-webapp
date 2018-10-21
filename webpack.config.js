@@ -35,10 +35,7 @@ if (NPM_TARGET === 'stats') {
     FULLMAP = true;
 }
 
-const STANDARD_EXCLUDE = [
-    path.join(__dirname, 'node_modules'),
-    path.join(__dirname, 'non_npm_dependencies'),
-];
+const STANDARD_EXCLUDE = [path.join(__dirname, 'node_modules'), path.join(__dirname, 'non_npm_dependencies')];
 
 var MYSTATS = {
 
@@ -167,9 +164,7 @@ var config = {
             {
                 type: 'javascript/auto',
                 test: /\.json$/,
-                include: [
-                    path.resolve(__dirname, 'i18n'),
-                ],
+                include: [path.resolve(__dirname, 'i18n')],
                 exclude: [/en\.json$/],
                 use: [
                     {
@@ -230,11 +225,7 @@ var config = {
         ],
     },
     resolve: {
-        modules: [
-            'node_modules',
-            'non_npm_dependencies',
-            path.resolve(__dirname),
-        ],
+        modules: ['node_modules', 'non_npm_dependencies', path.resolve(__dirname)],
         alias: {
             jquery: 'jquery/src/jquery',
             superagent: 'node_modules/superagent/lib/client',
@@ -285,58 +276,70 @@ var config = {
             fingerprints: false,
             orientation: 'any',
             filename: 'manifest.json',
-            icons: [{
-                src: path.resolve('images/favicon/android-chrome-192x192.png'),
-                type: 'image/png',
-                sizes: '192x192',
-            }, {
-                src: path.resolve('images/favicon/apple-touch-icon-120x120.png'),
-                type: 'image/png',
-                sizes: '120x120',
-                ios: true,
-            }, {
-                src: path.resolve('images/favicon/apple-touch-icon-144x144.png'),
-                type: 'image/png',
-                sizes: '144x144',
-                ios: true,
-            }, {
-                src: path.resolve('images/favicon/apple-touch-icon-152x152.png'),
-                type: 'image/png',
-                sizes: '152x152',
-                ios: true,
-            }, {
-                src: path.resolve('images/favicon/apple-touch-icon-57x57.png'),
-                type: 'image/png',
-                sizes: '57x57',
-                ios: true,
-            }, {
-                src: path.resolve('images/favicon/apple-touch-icon-60x60.png'),
-                type: 'image/png',
-                sizes: '60x60',
-                ios: true,
-            }, {
-                src: path.resolve('images/favicon/apple-touch-icon-72x72.png'),
-                type: 'image/png',
-                sizes: '72x72',
-                ios: true,
-            }, {
-                src: path.resolve('images/favicon/apple-touch-icon-76x76.png'),
-                type: 'image/png',
-                sizes: '76x76',
-                ios: true,
-            }, {
-                src: path.resolve('images/favicon/favicon-16x16.png'),
-                type: 'image/png',
-                sizes: '16x16',
-            }, {
-                src: path.resolve('images/favicon/favicon-32x32.png'),
-                type: 'image/png',
-                sizes: '32x32',
-            }, {
-                src: path.resolve('images/favicon/favicon-96x96.png'),
-                type: 'image/png',
-                sizes: '96x96',
-            }],
+            icons: [
+                {
+                    src: path.resolve('images/favicon/android-chrome-192x192.png'),
+                    type: 'image/png',
+                    sizes: '192x192',
+                },
+                {
+                    src: path.resolve('images/favicon/apple-touch-icon-120x120.png'),
+                    type: 'image/png',
+                    sizes: '120x120',
+                    ios: true,
+                },
+                {
+                    src: path.resolve('images/favicon/apple-touch-icon-144x144.png'),
+                    type: 'image/png',
+                    sizes: '144x144',
+                    ios: true,
+                },
+                {
+                    src: path.resolve('images/favicon/apple-touch-icon-152x152.png'),
+                    type: 'image/png',
+                    sizes: '152x152',
+                    ios: true,
+                },
+                {
+                    src: path.resolve('images/favicon/apple-touch-icon-57x57.png'),
+                    type: 'image/png',
+                    sizes: '57x57',
+                    ios: true,
+                },
+                {
+                    src: path.resolve('images/favicon/apple-touch-icon-60x60.png'),
+                    type: 'image/png',
+                    sizes: '60x60',
+                    ios: true,
+                },
+                {
+                    src: path.resolve('images/favicon/apple-touch-icon-72x72.png'),
+                    type: 'image/png',
+                    sizes: '72x72',
+                    ios: true,
+                },
+                {
+                    src: path.resolve('images/favicon/apple-touch-icon-76x76.png'),
+                    type: 'image/png',
+                    sizes: '76x76',
+                    ios: true,
+                },
+                {
+                    src: path.resolve('images/favicon/favicon-16x16.png'),
+                    type: 'image/png',
+                    sizes: '16x16',
+                },
+                {
+                    src: path.resolve('images/favicon/favicon-32x32.png'),
+                    type: 'image/png',
+                    sizes: '32x32',
+                },
+                {
+                    src: path.resolve('images/favicon/favicon-96x96.png'),
+                    type: 'image/png',
+                    sizes: '96x96',
+                },
+            ],
         }),
     ],
 };
@@ -367,9 +370,11 @@ if (DEV) {
 } else {
     env.NODE_ENV = JSON.stringify('production');
 }
-config.plugins.push(new webpack.DefinePlugin({
-    'process.env': env,
-}));
+config.plugins.push(
+    new webpack.DefinePlugin({
+        'process.env': env,
+    })
+);
 
 // Test mode configuration
 if (TEST) {
