@@ -7,7 +7,7 @@ import {Route, Switch, Redirect} from 'react-router-dom';
 import classNames from 'classnames';
 
 import PermalinkView from 'components/permalink_view';
-import Navbar from 'components/navbar';
+import ChannelHeaderMobile from 'components/channel_header_mobile';
 import ChannelIdentifierRouter from 'components/channel_layout/channel_identifier_router';
 
 export default class CenterChannel extends React.PureComponent {
@@ -18,7 +18,6 @@ export default class CenterChannel extends React.PureComponent {
         lhsOpen: PropTypes.bool.isRequired,
         rhsOpen: PropTypes.bool.isRequired,
         rhsMenuOpen: PropTypes.bool.isRequired,
-        webRtcOpen: PropTypes.bool.isRequired,
     };
 
     constructor(props) {
@@ -41,15 +40,14 @@ export default class CenterChannel extends React.PureComponent {
             <div
                 key='inner-wrap'
                 className={classNames('inner-wrap', 'channel__wrap', {
-                    'webrtc--show': this.props.webRtcOpen,
                     'move--right': this.props.lhsOpen,
-                    'move--left': this.props.rhsOpen || this.props.webRtcOpen,
+                    'move--left': this.props.rhsOpen,
                     'move--left-small': this.props.rhsMenuOpen,
                 })}
             >
                 <div className='row header'>
                     <div id='navbar'>
-                        <Navbar/>
+                        <ChannelHeaderMobile/>
                     </div>
                 </div>
                 <div className='row main'>

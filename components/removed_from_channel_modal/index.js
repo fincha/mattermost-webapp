@@ -3,12 +3,11 @@
 
 import {bindActionCreators} from 'redux';
 import {connect} from 'react-redux';
-
 import {getCurrentUserId} from 'mattermost-redux/selectors/entities/users';
 
 import {goToLastViewedChannel} from 'actions/views/channel';
 
-import RemovedFromChannelModal from './removed_from_channel_modal.jsx';
+import RemovedFromChannelModal from './removed_from_channel_modal';
 
 function mapStateToProps(state) {
     return {

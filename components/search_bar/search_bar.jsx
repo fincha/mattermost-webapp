@@ -36,7 +36,6 @@ export default class SearchBar extends React.Component {
             showMentions: PropTypes.func,
             showFlaggedPosts: PropTypes.func,
             closeRightHandSide: PropTypes.func,
-            closeWebrtc: PropTypes.func,
         }),
     };
 
@@ -67,7 +66,6 @@ export default class SearchBar extends React.Component {
     }
 
     handleClose = () => {
-        this.props.actions.closeWebrtc();
         this.props.actions.closeRightHandSide();
     }
 
@@ -278,6 +276,7 @@ export default class SearchBar extends React.Component {
                             type='search'
                             autoFocus={this.props.isFocus && this.props.searchTerms === ''}
                             delayInputUpdate={true}
+                            renderDividers={true}
                         />
                         <div
                             id='searchClearButton'

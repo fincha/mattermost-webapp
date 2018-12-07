@@ -17,6 +17,7 @@ import ElasticsearchSettings from 'components/admin_console/elasticsearch_settin
 import EmailSettings from 'components/admin_console/email_settings.jsx';
 import MessageExportSettings from 'components/admin_console/message_export_settings';
 import PasswordSettings from 'components/admin_console/password_settings.jsx';
+import CustomTermsOfServiceSettings from 'components/admin_console/custom_terms_of_service_settings';
 
 import SchemaAdminSettings from 'components/admin_console/schema_admin_settings';
 import PushSettings from 'components/admin_console/push_settings.jsx';
@@ -380,14 +381,6 @@ export default class AdminConsole extends React.Component {
                                         }}
                                     />
                                     <SCRoute
-                                        path={`${props.match.url}/webrtc`}
-                                        component={SchemaAdminSettings}
-                                        extraProps={{
-                                            ...extraProps,
-                                            schema: AdminDefinition.settings.integrations.webrtc.schema,
-                                        }}
-                                    />
-                                    <SCRoute
                                         path={`${props.match.url}/external`}
                                         component={SchemaAdminSettings}
                                         extraProps={{
@@ -403,14 +396,6 @@ export default class AdminConsole extends React.Component {
                             path={`${this.props.match.url}/plugins`}
                             render={(props) => (
                                 <Switch>
-                                    <SCRoute
-                                        path={`${props.match.url}/configuration`}
-                                        component={SchemaAdminSettings}
-                                        extraProps={{
-                                            ...extraProps,
-                                            schema: AdminDefinition.settings.plugins.configuration.schema,
-                                        }}
-                                    />
                                     <SCRoute
                                         path={`${props.match.url}/management`}
                                         component={SchemaAdminSettings}
@@ -498,6 +483,11 @@ export default class AdminConsole extends React.Component {
                                             ...extraProps,
                                             schema: AdminDefinition.settings.customization.legal_and_support.schema,
                                         }}
+                                    />
+                                    <SCRoute
+                                        path={`${props.match.url}/custom_terms_of_service`}
+                                        component={CustomTermsOfServiceSettings}
+                                        extraProps={extraProps}
                                     />
                                     <SCRoute
                                         path={`${props.match.url}/native_app_links`}

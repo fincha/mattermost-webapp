@@ -116,11 +116,6 @@ export default class FileUpload extends PureComponent {
         postType: PropTypes.string,
 
         /**
-         * Function to be called to upload file
-         */
-        uploadFile: PropTypes.func.isRequired,
-
-        /**
          * The maximum uploaded file size.
          */
         maxFileSize: PropTypes.number,
@@ -135,6 +130,23 @@ export default class FileUpload extends PureComponent {
          */
         pluginFileUploadMethods: PropTypes.arrayOf(PropTypes.object),
         pluginFilesWillUploadHooks: PropTypes.arrayOf(PropTypes.object),
+
+        /**
+         * Function called when superAgent fires progress event.
+         */
+        onUploadProgress: PropTypes.func.isRequired,
+        actions: PropTypes.shape({
+
+            /**
+             * Function to be called to upload file
+             */
+            uploadFile: PropTypes.func.isRequired,
+
+            /**
+             * Function to be called when file is uploaded or failed
+             */
+            handleFileUploadEnd: PropTypes.func.isRequired,
+        }).isRequired,
     };
 
     static contextTypes = {
@@ -248,15 +260,39 @@ export default class FileUpload extends PureComponent {
             // generate a unique id that can be used by other components to refer back to this upload
             const clientId = generateId();
 
-            const request = this.props.uploadFile(
+            const request = this.props.actions.uploadFile(
                 sortedFiles[i],
                 sortedFiles[i].name,
                 currentChannelId,
                 rootId,
                 clientId,
-                (data, channelId, currentRootId) => this.fileUploadSuccess(data, channelId, currentRootId),
-                (e, clientIdOnError, channelId, currentRootId) => this.fileUploadFail(e, clientIdOnError, channelId, currentRootId)
             );
+
+            request.on('progress', (progressEvent) => {
+                this.props.onUploadProgress({
+                    clientId,
+                    name: sortedFiles[i].name,
+                    percent: progressEvent.percent,
+                    type: sortedFiles[i].type,
+                });
+            });
+
+            request.end((err, res) => {
+                const {error, data} = this.props.actions.handleFileUploadEnd(
+                    sortedFiles[i],
+                    sortedFiles[i].name,
+                    currentChannelId,
+                    rootId,
+                    clientId,
+                    {err, res},
+                );
+
+                if (error) {
+                    this.fileUploadFail(error, clientId, currentChannelId, rootId);
+                } else if (data) {
+                    this.fileUploadSuccess(data, currentChannelId, rootId);
+                }
+            });
 
             this.setState({requests: {...this.state.requests, [clientId]: request}});
             clientIds.push(clientId);

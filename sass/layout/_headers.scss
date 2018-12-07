@@ -332,6 +332,8 @@
         blockquote {
             font-size: 13px;
             padding: 1px 0 0 23px;
+            overflow: hidden;
+            text-overflow: ellipsis;
 
             &:before {
                 font-size: 16px;
@@ -662,8 +664,7 @@
             }
         }
 
-        .channel__wrap.move--left &,
-        .channel__wrap.webrtc--show & {
+        .channel__wrap.move--left & {
             position: absolute;
             right: -400px;
             top: 14px;

@@ -2,6 +2,7 @@
 // See LICENSE.txt for license information.
 
 import debounce from 'lodash/debounce';
+import {batchActions} from 'redux-batched-actions';
 
 import {
     getChannel,
@@ -17,9 +18,10 @@ import {getPostThread} from 'mattermost-redux/actions/posts';
 import {logout} from 'mattermost-redux/actions/users';
 import {Client4} from 'mattermost-redux/client';
 import {getConfig} from 'mattermost-redux/selectors/entities/general';
-import {getCurrentTeamId} from 'mattermost-redux/selectors/entities/teams';
+import {getCurrentTeamId, getTeam, getMyTeams, getMyTeamMember} from 'mattermost-redux/selectors/entities/teams';
 import {getCurrentUserId} from 'mattermost-redux/selectors/entities/users';
-import {getCurrentChannelStats} from 'mattermost-redux/selectors/entities/channels';
+import {getCurrentChannelStats, getCurrentChannelId, getChannelByName, getMyChannelMember as selectMyChannelMember} from 'mattermost-redux/selectors/entities/channels';
+import {ChannelTypes} from 'mattermost-redux/action_types';
 
 import {browserHistory} from 'utils/browser_history';
 import {loadChannelsForCurrentUser} from 'actions/channel_actions.jsx';
@@ -33,11 +35,7 @@ import AppDispatcher from 'dispatcher/app_dispatcher.jsx';
 import {getCurrentLocale} from 'selectors/i18n';
 import {getIsRhsOpen, getRhsState} from 'selectors/rhs';
 import BrowserStore from 'stores/browser_store.jsx';
-import ChannelStore from 'stores/channel_store.jsx';
-import ErrorStore from 'stores/error_store.jsx';
 import store from 'stores/redux_store.jsx';
-import TeamStore from 'stores/team_store.jsx';
-import UserStore from 'stores/user_store.jsx';
 import LocalStorageStore from 'stores/local_storage_store';
 import WebSocketClient from 'client/web_websocket_client.jsx';
 
@@ -52,7 +50,8 @@ const getState = store.getState;
 
 export function emitChannelClickEvent(channel) {
     async function userVisitedFakeChannel(chan, success, fail) {
-        const currentUserId = UserStore.getCurrentId();
+        const state = getState();
+        const currentUserId = getCurrentUserId(state);
         const otherUserId = Utils.getUserIdFromChannelName(chan);
         const {data: receivedChannel} = await createDirectChannel(currentUserId, otherUserId)(dispatch, getState);
         if (receivedChannel) {
@@ -64,11 +63,12 @@ export function emitChannelClickEvent(channel) {
     function switchToChannel(chan) {
         const state = getState();
         const getMyChannelMemberPromise = dispatch(getMyChannelMember(chan.id));
-        const oldChannelId = ChannelStore.getCurrentId();
+        const oldChannelId = getCurrentChannelId(state);
         const userId = getCurrentUserId(state);
         const teamId = chan.team_id || getCurrentTeamId(state);
         const isRHSOpened = getIsRhsOpen(state);
         const isPinnedPostsShowing = getRhsState(state) === RHSStates.PIN;
+        const member = selectMyChannelMember(state, chan.id);
 
         getMyChannelMemberPromise.then(() => {
             dispatch(getChannelStats(chan.id));
@@ -92,11 +92,15 @@ export function emitChannelClickEvent(channel) {
 
         loadProfilesForSidebar();
 
-        AppDispatcher.handleViewAction({
-            type: ActionTypes.CLICK_CHANNEL,
-            id: chan.id,
-            team_id: teamId,
-        });
+        dispatch(batchActions([{
+            type: ChannelTypes.SELECT_CHANNEL,
+            data: chan.id,
+        }, {
+            type: ActionTypes.SELECT_CHANNEL_WITH_MEMBER,
+            data: chan.id,
+            channel: chan,
+            member,
+        }]));
     }
 
     if (channel.fake) {
@@ -114,14 +118,8 @@ export function emitChannelClickEvent(channel) {
     }
 }
 
-export async function doFocusPost(channelId, postId, data) {
-    AppDispatcher.handleServerAction({
-        type: ActionTypes.RECEIVED_FOCUSED_POST,
-        postId,
-        channelId,
-        post_list: data,
-    });
-
+export async function doFocusPost(channelId, postId) {
+    dispatch(selectChannel(channelId));
     dispatch({
         type: ActionTypes.RECEIVED_FOCUSED_POST,
         data: postId,
@@ -129,11 +127,11 @@ export async function doFocusPost(channelId, postId, data) {
 
     const member = getState().entities.channels.myMembers[channelId];
     if (member == null) {
-        await dispatch(joinChannel(UserStore.getCurrentId(), null, channelId));
+        await dispatch(joinChannel(getCurrentUserId(getState()), null, channelId));
     }
 
-    loadChannelsForCurrentUser();
-    getChannelStats(channelId)(dispatch, getState);
+    dispatch(loadChannelsForCurrentUser());
+    dispatch(getChannelStats(channelId));
 }
 
 export function emitCloseRightHandSide() {
@@ -141,7 +139,7 @@ export function emitCloseRightHandSide() {
 }
 
 export async function emitPostFocusEvent(postId, returnTo = '') {
-    loadChannelsForCurrentUser();
+    dispatch(loadChannelsForCurrentUser());
     const {data} = await dispatch(getPostThread(postId));
 
     if (!data) {
@@ -174,27 +172,6 @@ export async function emitPostFocusEvent(postId, returnTo = '') {
     }
 
     await doFocusPost(channelId, postId, data);
-}
-
-export function emitUserPostedEvent(post) {
-    AppDispatcher.handleServerAction({
-        type: ActionTypes.CREATE_POST,
-        post,
-    });
-}
-
-export function emitUserCommentedEvent(post) {
-    AppDispatcher.handleServerAction({
-        type: ActionTypes.CREATE_COMMENT,
-        post,
-    });
-}
-
-export function showAccountSettingsModal() {
-    AppDispatcher.handleViewAction({
-        type: ActionTypes.TOGGLE_ACCOUNT_SETTINGS_MODAL,
-        value: true,
-    });
 }
 
 export function toggleShortcutsModal() {
@@ -243,87 +220,10 @@ export function showGetTeamInviteLinkModal() {
     });
 }
 
-export function showInviteMemberModal() {
-    AppDispatcher.handleViewAction({
-        type: ActionTypes.TOGGLE_INVITE_MEMBER_MODAL,
-        value: true,
-    });
-}
-
 export function showLeavePrivateChannelModal(channel) {
     AppDispatcher.handleViewAction({
         type: ActionTypes.TOGGLE_LEAVE_PRIVATE_CHANNEL_MODAL,
         value: channel,
-    });
-}
-
-export function emitSuggestionPretextChanged(suggestionId, pretext) {
-    AppDispatcher.handleViewAction({
-        type: ActionTypes.SUGGESTION_PRETEXT_CHANGED,
-        id: suggestionId,
-        pretext,
-    });
-}
-
-export function emitSelectNextSuggestion(suggestionId) {
-    AppDispatcher.handleViewAction({
-        type: ActionTypes.SUGGESTION_SELECT_NEXT,
-        id: suggestionId,
-    });
-}
-
-export function emitSelectPreviousSuggestion(suggestionId) {
-    AppDispatcher.handleViewAction({
-        type: ActionTypes.SUGGESTION_SELECT_PREVIOUS,
-        id: suggestionId,
-    });
-}
-
-export function emitCompleteWordSuggestion(suggestionId, term = '') {
-    AppDispatcher.handleViewAction({
-        type: Constants.ActionTypes.SUGGESTION_COMPLETE_WORD,
-        id: suggestionId,
-        term,
-    });
-}
-
-export function emitClearSuggestions(suggestionId) {
-    AppDispatcher.handleViewAction({
-        type: Constants.ActionTypes.SUGGESTION_CLEAR_SUGGESTIONS,
-        id: suggestionId,
-    });
-}
-
-export function emitPreferenceChangedEvent(preference) {
-    AppDispatcher.handleServerAction({
-        type: Constants.ActionTypes.RECEIVED_PREFERENCE,
-        preference,
-    });
-
-    if (addedNewDmUser(preference)) {
-        loadProfilesForSidebar();
-    }
-}
-
-export function emitPreferencesChangedEvent(preferences) {
-    AppDispatcher.handleServerAction({
-        type: Constants.ActionTypes.RECEIVED_PREFERENCES,
-        preferences,
-    });
-
-    if (preferences.findIndex(addedNewDmUser) !== -1) {
-        loadProfilesForSidebar();
-    }
-}
-
-function addedNewDmUser(preference) {
-    return preference.category === Constants.Preferences.CATEGORY_DIRECT_CHANNEL_SHOW && preference.value === 'true';
-}
-
-export function emitPreferencesDeletedEvent(preferences) {
-    AppDispatcher.handleServerAction({
-        type: Constants.ActionTypes.DELETED_PREFERENCES,
-        preferences,
     });
 }
 
@@ -332,7 +232,7 @@ export function sendEphemeralPost(message, channelId, parentId) {
     const post = {
         id: Utils.generateId(),
         user_id: '0',
-        channel_id: channelId || ChannelStore.getCurrentId(),
+        channel_id: channelId || getCurrentChannelId(getState()),
         message,
         type: PostTypes.EPHEMERAL,
         create_at: timestamp,
@@ -349,7 +249,7 @@ export function sendAddToChannelEphemeralPost(user, addedUsername, addedUserId, 
     const post = {
         id: Utils.generateId(),
         user_id: user.id,
-        channel_id: channelId || ChannelStore.getCurrentId(),
+        channel_id: channelId || getCurrentChannelId(getState()),
         message: '',
         type: PostTypes.EPHEMERAL_ADD_TO_CHANNEL,
         create_at: timestamp,
@@ -387,15 +287,6 @@ export function emitLocalUserTypingEvent(channelId, parentPostId) {
     return dispatch(userTyping);
 }
 
-export function emitRemoteUserTypingEvent(channelId, userId, postParentId) {
-    AppDispatcher.handleViewAction({
-        type: Constants.ActionTypes.USER_TYPING,
-        channelId,
-        userId,
-        postParentId,
-    });
-}
-
 export function emitUserLoggedOutEvent(redirectTo = '/', shouldSignalLogout = true, userAction = true) {
     // If the logout was intentional, discard knowledge about having previously been logged in.
     // This bit is otherwise used to detect session expirations on the login page.
@@ -409,11 +300,9 @@ export function emitUserLoggedOutEvent(redirectTo = '/', shouldSignalLogout = tr
         }
 
         BrowserStore.clear();
-        ErrorStore.clearLastError();
-        ChannelStore.clear();
         stopPeriodicStatusUpdates();
         WebsocketActions.close();
-        document.cookie = 'MMUSERID=;expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+        document.cookie = 'MMUSERID=;expires=Thu, 01 Jan 1970 00:00:01 GMT;path=/';
         browserHistory.push(redirectTo);
     }).catch(() => {
         browserHistory.push(redirectTo);
@@ -421,9 +310,11 @@ export function emitUserLoggedOutEvent(redirectTo = '/', shouldSignalLogout = tr
 }
 
 export function toggleSideBarRightMenuAction() {
-    dispatch(closeRightHandSide());
-    dispatch(closeLhs());
-    dispatch(closeRhsMenu());
+    return (doDispatch) => {
+        doDispatch(closeRightHandSide());
+        doDispatch(closeLhs());
+        doDispatch(closeRhsMenu());
+    };
 }
 
 export function emitBrowserFocus(focus) {
@@ -437,36 +328,26 @@ export async function redirectUserToDefaultTeam() {
     const state = getState();
     const userId = getCurrentUserId(state);
     const locale = getCurrentLocale(state);
+    const teamId = LocalStorageStore.getPreviousTeamId(userId);
 
-    const teams = TeamStore.getAll();
-    const teamMembers = TeamStore.getMyTeamMembers();
-    let teamId = LocalStorageStore.getPreviousTeamId(userId);
+    let team = getTeam(state, teamId);
+    const myMember = getMyTeamMember(state, teamId);
 
-    function redirect(teamName, channelName) {
-        browserHistory.push(`/${teamName}/channels/${channelName}`);
-    }
-
-    if (!teams[teamId] && teamMembers.length > 0) {
-        let myTeams = [];
-        for (const index in teamMembers) {
-            if (teamMembers.hasOwnProperty(index)) {
-                const teamMember = teamMembers[index];
-                myTeams.push(teams[teamMember.team_id]);
-            }
-        }
+    if (!team || !myMember || !myMember.team_id) {
+        team = null;
+        let myTeams = getMyTeams(state);
 
         if (myTeams.length > 0) {
             myTeams = filterAndSortTeamsByDisplayName(myTeams, locale);
             if (myTeams && myTeams[0]) {
-                teamId = myTeams[0].id;
+                team = myTeams[0];
             }
         }
     }
 
-    const team = teams[teamId];
     if (userId && team) {
         let channelName = LocalStorageStore.getPreviousChannelName(userId, teamId);
-        const channel = ChannelStore.getChannelNamesMap()[channelName];
+        const channel = getChannelByName(state, channelName);
         if (channel && channel.team_id === team.id) {
             dispatch(selectChannel(channel.id));
             channelName = channel.name;
@@ -477,7 +358,7 @@ export async function redirectUserToDefaultTeam() {
             }
         }
 
-        redirect(team.name, channelName);
+        browserHistory.push(`/${team.name}/channels/${channelName}`);
     } else {
         browserHistory.push('/select_team');
     }
@@ -494,14 +375,6 @@ export function postListScrollChangeToBottom() {
     AppDispatcher.handleViewAction({
         type: EventTypes.POST_LIST_SCROLL_CHANGE,
         value: true,
-    });
-}
-
-export function emitPopoverMentionKeyClick(isRHS, mentionKey) {
-    AppDispatcher.handleViewAction({
-        type: ActionTypes.POPOVER_MENTION_KEY_CLICK,
-        isRHS,
-        mentionKey,
     });
 }
 

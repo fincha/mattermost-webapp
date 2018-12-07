@@ -93,34 +93,8 @@ export const Preferences = {
 };
 
 export const ActionTypes = keyMirror({
-    RECEIVED_ERROR: null,
-    CLICK_CHANNEL: null,
-    CREATE_CHANNEL: null,
-    CREATE_POST: null,
-    CREATE_COMMENT: null,
-    POST_DELETED: null,
-    POST_UPDATED: null,
-    REMOVE_POST: null,
-
-    RECEIVED_CHANNELS: null,
-    RECEIVED_CHANNEL: null,
-    RECEIVED_CHANNEL_MEMBER: null,
-    RECEIVED_MORE_CHANNELS: null,
-    RECEIVED_CHANNEL_STATS: null,
-    RECEIVED_MY_CHANNEL_MEMBERS: null,
-    RECEIVED_MEMBERS_IN_CHANNEL: null,
-
-    FOCUS_POST: null,
-    RECEIVED_POSTS: null,
     RECEIVED_FOCUSED_POST: null,
-    RECEIVED_EDIT_POST: null,
-    EDIT_POST: null,
     SELECT_POST: null,
-    RECEIVED_POST_SELECTED: null,
-    RECEIVED_MENTION_DATA: null,
-    RECEIVED_ADD_MENTION: null,
-    RECEIVED_POST_PINNED: null,
-    RECEIVED_POST_UNPINNED: null,
     INCREASE_POST_VISIBILITY: null,
     LOADING_POSTS: null,
 
@@ -141,80 +115,13 @@ export const ActionTypes = keyMirror({
     SEARCH_PINNED_POSTS_SUCCESS: null,
     SEARCH_PINNED_POSTS_FAILURE: null,
 
-    RECEIVED_PROFILES: null,
-    RECEIVED_PROFILES_IN_TEAM: null,
-    RECEIVED_PROFILES_NOT_IN_TEAM: null,
-    RECEIVED_PROFILE: null,
-    RECEIVED_PROFILES_IN_CHANNEL: null,
-    RECEIVED_PROFILES_NOT_IN_CHANNEL: null,
-    RECEIVED_PROFILES_WITHOUT_TEAM: null,
-    RECEIVED_ME: null,
-    RECEIVED_SESSIONS: null,
-    RECEIVED_AUDITS: null,
-    RECEIVED_TEAMS: null,
-    RECEIVED_STATUSES: null,
-    RECEIVED_PREFERENCE: null,
-    RECEIVED_PREFERENCES: null,
-    DELETED_PREFERENCES: null,
-    RECEIVED_FILE_INFOS: null,
-    RECEIVED_ANALYTICS: null,
-
-    RECEIVED_INCOMING_WEBHOOKS: null,
-    RECEIVED_INCOMING_WEBHOOK: null,
-    UPDATED_INCOMING_WEBHOOK: null,
-    REMOVED_INCOMING_WEBHOOK: null,
-    RECEIVED_OUTGOING_WEBHOOKS: null,
-    RECEIVED_OUTGOING_WEBHOOK: null,
-    UPDATED_OUTGOING_WEBHOOK: null,
-    REMOVED_OUTGOING_WEBHOOK: null,
-    RECEIVED_COMMANDS: null,
-    RECEIVED_COMMAND: null,
-    UPDATED_COMMAND: null,
-    REMOVED_COMMAND: null,
-    RECEIVED_OAUTHAPPS: null,
-    RECEIVED_OAUTHAPP: null,
-    REMOVED_OAUTHAPP: null,
-
-    RECEIVED_CUSTOM_EMOJIS: null,
-    RECEIVED_CUSTOM_EMOJI: null,
-    UPDATED_CUSTOM_EMOJI: null,
-    REMOVED_CUSTOM_EMOJI: null,
-
-    RECEIVED_REACTIONS: null,
-    ADDED_REACTION: null,
-    REMOVED_REACTION: null,
-
-    RECEIVED_MSG: null,
-
-    RECEIVED_TEAM: null,
-    RECEIVED_MY_TEAM: null,
-    CREATED_TEAM: null,
-    UPDATE_TEAM: null,
-
     SET_NAVIGATION_BLOCKED: null,
     DEFER_NAVIGATION: null,
     CANCEL_NAVIGATION: null,
     CONFIRM_NAVIGATION: null,
-    RECEIVED_CONFIG: null,
-    RECEIVED_LOGS: null,
-    RECEIVED_SERVER_AUDITS: null,
-    RECEIVED_SERVER_COMPLIANCE_REPORTS: null,
-    RECEIVED_ALL_TEAMS: null,
-    RECEIVED_ALL_TEAM_LISTINGS: null,
-    RECEIVED_MY_TEAM_MEMBERS: null,
-    RECEIVED_MY_TEAMS_UNREAD: null,
-    RECEIVED_MEMBERS_IN_TEAM: null,
-    RECEIVED_TEAM_STATS: null,
 
-    UPDATE_OPEN_GRAPH_METADATA: null,
-    RECIVED_OPEN_GRAPH_METADATA: null,
-
-    SHOW_SEARCH: null,
-
-    TOGGLE_ACCOUNT_SETTINGS_MODAL: null,
     TOGGLE_SHORTCUTS_MODAL: null,
     TOGGLE_IMPORT_THEME_MODAL: null,
-    TOGGLE_INVITE_MEMBER_MODAL: null,
     TOGGLE_DELETE_POST_MODAL: null,
     TOGGLE_GET_POST_LINK_MODAL: null,
     TOGGLE_GET_TEAM_INVITE_LINK_MODAL: null,
@@ -226,16 +133,7 @@ export const ActionTypes = keyMirror({
     SHOW_EDIT_POST_MODAL: null,
     HIDE_EDIT_POST_MODAL: null,
 
-    SUGGESTION_PRETEXT_CHANGED: null,
-    SUGGESTION_RECEIVED_SUGGESTIONS: null,
-    SUGGESTION_CLEAR_SUGGESTIONS: null,
-    SUGGESTION_COMPLETE_WORD: null,
-    SUGGESTION_SELECT_NEXT: null,
-    SUGGESTION_SELECT_PREVIOUS: null,
-
     BROWSER_CHANGE_FOCUS: null,
-
-    EMOJI_POSTED: null,
 
     RECEIVED_PLUGIN_COMPONENT: null,
     REMOVED_PLUGIN_COMPONENT: null,
@@ -247,8 +145,6 @@ export const ActionTypes = keyMirror({
 
     MODAL_OPEN: null,
     MODAL_CLOSE: null,
-
-    POPOVER_MENTION_KEY_CLICK: null,
 
     SELECT_CHANNEL_WITH_MEMBER: null,
 
@@ -262,34 +158,16 @@ export const ActionTypes = keyMirror({
     OPEN_RHS_MENU: null,
     CLOSE_RHS_MENU: null,
 
-    INIT_WEBRTC: null,
-    CLOSE_WEBRTC: null,
-
     STORE_REHYDRATION_FAILED: null,
 
     DISMISS_NOTICE: null,
 
-    UPDATE_BUSY_WEBRTC: null,
-
     SELECT_ATTACHMENT_MENU_ACTION: null,
 
     RECEIVED_TRANSLATIONS: null,
-});
 
-export const WebrtcActionTypes = keyMirror({
-    INITIALIZE: null,
-    NOTIFY: null,
-    CHANGED: null,
-    ANSWER: null,
-    DECLINE: null,
-    CANCEL: null,
-    NO_ANSWER: null,
-    BUSY: null,
-    FAILED: null,
-    UNSUPPORTED: null,
-    MUTED: null,
-    IN_PROGRESS: null,
-    DISABLED: null,
+    INCREMENT_WS_ERROR_COUNT: null,
+    RESET_WS_ERROR_COUNT: null,
 });
 
 export const ModalIdentifiers = {
@@ -297,12 +175,21 @@ export const ModalIdentifiers = {
     DELETE_CHANNEL: 'delete_channel',
     CHANNEL_NOTIFICATIONS: 'channel_notifications',
     CHANNEL_INVITE: 'channel_invite',
+    CHANNEL_MEMBERS: 'channel_members',
+    ADD_USER_TO_CHANNEL: 'add_user_to_channel',
     CREATE_DM_CHANNEL: 'create_dm_channel',
     EDIT_CHANNEL_HEADER: 'edit_channel_header',
+    EDIT_CHANNEL_PURPOSE: 'edit_channel_purpose',
     DELETE_POST: 'delete_post',
     CONVERT_CHANNEL: 'convert_channel',
     RESET_STATUS: 'reset_status',
     LEAVE_TEAM: 'leave_team',
+    RENAME_CHANNEL: 'rename_channel',
+    USER_SETTINGS: 'user_settings',
+    QUICK_SWITCH: 'quick_switch',
+    REMOVED_FROM_CHANNEL: 'removed_from_channel',
+    EMAIL_INVITE: 'email_invite',
+    INTERACTIVE_DIALOG: 'interactive_dialog',
 };
 
 export const UserStatuses = {
@@ -351,7 +238,6 @@ export const SocketEvents = {
     EPHEMERAL_MESSAGE: 'ephemeral_message',
     STATUS_CHANGED: 'status_change',
     HELLO: 'hello',
-    WEBRTC: 'webrtc',
     REACTION_ADDED: 'reaction_added',
     REACTION_REMOVED: 'reaction_removed',
     EMOJI_ADDED: 'emoji_added',
@@ -360,6 +246,7 @@ export const SocketEvents = {
     LICENSE_CHANGED: 'license_changed',
     CONFIG_CHANGED: 'config_changed',
     PLUGIN_STATUSES_CHANGED: 'plugin_statuses_changed',
+    OPEN_DIALOG: 'open_dialog',
 };
 
 export const TutorialSteps = {
@@ -550,6 +437,11 @@ export const GroupUnreadChannels = {
     DEFAULT_OFF: 'default_off',
 };
 
+export const SidebarChannelGroups = {
+    UNREADS: 'unreads',
+    FAVORITE: 'favorite',
+};
+
 export const PermissionsScope = {
     [Permissions.INVITE_USER]: 'team_scope',
     [Permissions.ADD_USER_TO_TEAM]: 'team_scope',
@@ -662,7 +554,6 @@ export const Constants = {
     Preferences,
     SocketEvents,
     ActionTypes,
-    WebrtcActionTypes,
     UserStatuses,
     UserSearchOptions,
     TutorialSteps,
@@ -728,6 +619,7 @@ export const Constants = {
         word: 'word',
         patch: 'patch',
         other: 'generic',
+        image: 'image',
     },
     MAX_UPLOAD_FILES: 5,
     MAX_FILENAME_LENGTH: 35,
@@ -756,6 +648,7 @@ export const Constants = {
     GET_TERMS_ERROR: 'get_terms_error',
     TERMS_REJECTED: 'terms_rejected',
     SIGNIN_VERIFIED: 'verified',
+    CREATE_LDAP: 'create_ldap',
     SESSION_EXPIRED: 'expired',
     POST_CHUNK_SIZE: 60,
     PROFILE_CHUNK_SIZE: 100,
@@ -1245,8 +1138,6 @@ export const Constants = {
     },
     OVERLAY_TIME_DELAY_SMALL: 100,
     OVERLAY_TIME_DELAY: 400,
-    WEBRTC_TIME_DELAY: 750,
-    WEBRTC_CLEAR_ERROR_DELAY: 15000,
     DEFAULT_MAX_USERS_PER_TEAM: 50,
     DEFAULT_MAX_CHANNELS_PER_TEAM: 2000,
     DEFAULT_MAX_NOTIFICATIONS_PER_CHANNEL: 1000,
@@ -1265,13 +1156,15 @@ export const Constants = {
     MAX_TRIGGER_LENGTH: 128,
     MAX_SITENAME_LENGTH: 30,
     MAX_CUSTOM_BRAND_TEXT_LENGTH: 500,
+    MAX_TERMS_OF_SERVICE_TEXT_LENGTH: 16383,
+    DEFAULT_TERMS_OF_SERVICE_RE_ACCEPTANCE_PERIOD: 365,
     MIN_HASHTAG_LINK_LENGTH: 3,
     CHANNEL_SCROLL_ADJUSTMENT: 100,
     EMOJI_PATH: '/static/emoji',
     RECENT_EMOJI_KEY: 'recentEmojis',
     DEFAULT_WEBHOOK_LOGO: logoWebhook,
     MHPNS: 'https://push.mattermost.com',
-    MTPNS: 'http://push-test.mattermost.com',
+    MTPNS: 'https://push-test.mattermost.com',
     MAX_PREV_MSGS: 100,
     POST_COLLAPSE_TIMEOUT: 1000 * 60 * 5, // five minutes
     PERMISSIONS_ALL: 'all',
@@ -1289,6 +1182,7 @@ export const Constants = {
     MENTION_MORE_CHANNELS: 'mention.morechannels',
     MENTION_UNREAD_CHANNELS: 'mention.unread.channels',
     MENTION_MEMBERS: 'mention.members',
+    MENTION_MORE_MEMBERS: 'mention.moremembers',
     MENTION_NONMEMBERS: 'mention.nonmembers',
     MENTION_SPECIAL: 'mention.special',
     DEFAULT_NOTIFICATION_DURATION: 5000,
@@ -1316,6 +1210,7 @@ t('suggestion.mention.channels');
 t('suggestion.mention.morechannels');
 t('suggestion.mention.unread.channels');
 t('suggestion.mention.members');
+t('suggestion.mention.moremembers');
 t('suggestion.mention.nonmembers');
 t('suggestion.mention.special');
 

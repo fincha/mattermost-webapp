@@ -9,8 +9,6 @@ import {isEmail} from 'mattermost-redux/utils/helpers';
 
 import {trackEvent} from 'actions/diagnostics_actions.jsx';
 import {updateUser, uploadProfileImage} from 'actions/user_actions.jsx';
-import ErrorStore from 'stores/error_store.jsx';
-import UserStore from 'stores/user_store.jsx';
 import Constants from 'utils/constants.jsx';
 import * as Utils from 'utils/utils.jsx';
 import {t} from 'utils/i18n';
@@ -102,6 +100,7 @@ class UserSettingsGeneralTab extends React.Component {
         actions: PropTypes.shape({
             getMe: PropTypes.func.isRequired,
             sendVerificationEmail: PropTypes.func.isRequred,
+            setDefaultProfileImage: PropTypes.func.isRequred,
         }).isRequired,
         sendEmailNotifications: PropTypes.bool,
         requireEmailVerification: PropTypes.bool,
@@ -122,18 +121,8 @@ class UserSettingsGeneralTab extends React.Component {
         this.state = this.setupInitialState(props);
     }
 
-    handleEmailVerificationError = () => {
-        ErrorStore.storeLastError({
-            notification: true,
-            message: Constants.AnnouncementBarMessages.EMAIL_VERIFICATION_REQUIRED,
-        });
-        ErrorStore.emitChange();
-    }
-
     handleEmailResend = (email) => {
-        this.setState({resendStatus: 'sending', showSpinner: true}, () => {
-            this.handleEmailVerificationError();
-        });
+        this.setState({resendStatus: 'sending', showSpinner: true});
         this.props.actions.sendVerificationEmail(email).then(({data, error: err}) => {
             if (data) {
                 this.setState({resendStatus: 'success'});
@@ -169,8 +158,6 @@ class UserSettingsGeneralTab extends React.Component {
                             setTimeout(() => {
                                 this.setState({
                                     showSpinner: false,
-                                }, () => {
-                                    this.handleEmailVerificationError();
                                 });
                             }, 500);
                         }}
@@ -282,7 +269,6 @@ class UserSettingsGeneralTab extends React.Component {
                 this.props.actions.getMe();
                 const verificationEnabled = this.props.sendEmailNotifications && this.props.requireEmailVerification && emailUpdated;
                 if (verificationEnabled) {
-                    this.handleEmailVerificationError();
                     this.setState({emailChangeInProgress: true});
                 }
             },
@@ -298,9 +284,23 @@ class UserSettingsGeneralTab extends React.Component {
         );
     }
 
-    submitPicture = (e) => {
-        e.preventDefault();
+    setDefaultProfilePicture = async () => {
+        try {
+            await this.props.actions.setDefaultProfileImage(this.props.user.id);
+            this.updateSection('');
+            this.submitActive = false;
+        } catch (err) {
+            let serverError;
+            if (err.message) {
+                serverError = err.message;
+            } else {
+                serverError = err;
+            }
+            this.setState({serverError, emailError: '', clientError: '', sectionIsSaving: false});
+        }
+    }
 
+    submitPicture = () => {
         if (!this.state.pictureFile) {
             return;
         }
@@ -450,7 +450,7 @@ class UserSettingsGeneralTab extends React.Component {
                     />
                 );
             } else if (this.state.emailChangeInProgress) {
-                const newEmail = UserStore.getCurrentUser().email;
+                const newEmail = this.props.user.email;
                 if (newEmail) {
                     helpText = (
                         <React.Fragment>
@@ -644,7 +644,7 @@ class UserSettingsGeneralTab extends React.Component {
             let describe = '';
             if (this.props.user.auth_service === '') {
                 if (this.state.emailChangeInProgress) {
-                    const newEmail = UserStore.getCurrentUser().email;
+                    const newEmail = this.props.user.email;
                     if (newEmail) {
                         describe = (
                             <React.Fragment>
@@ -666,7 +666,7 @@ class UserSettingsGeneralTab extends React.Component {
                         );
                     }
                 } else {
-                    describe = UserStore.getCurrentUser().email;
+                    describe = this.props.user.email;
                 }
             } else if (this.props.user.auth_service === Constants.GITLAB_SERVICE) {
                 describe = (
@@ -1078,7 +1078,7 @@ class UserSettingsGeneralTab extends React.Component {
             usernameSection = (
                 <SettingItemMin
                     title={formatMessage(holders.username)}
-                    describe={UserStore.getCurrentUser().username}
+                    describe={this.props.user.username}
                     focused={this.props.prevActiveSection === prevSections.username}
                     section={'username'}
                     updateSection={this.updateSection}
@@ -1196,7 +1196,9 @@ class UserSettingsGeneralTab extends React.Component {
                 <SettingPicture
                     title={formatMessage(holders.profilePicture)}
                     onSubmit={this.submitPicture}
+                    onSetDefault={user.last_picture_update > 0 ? this.setDefaultProfilePicture : null}
                     src={Utils.imageURLForUser(user)}
+                    defaultImageSrc={Utils.defaultImageURLForUser(user.id)}
                     serverError={serverError}
                     clientError={clientError}
                     updateSection={(e) => {

@@ -18,12 +18,14 @@ import {getBool} from 'mattermost-redux/selectors/entities/preferences';
 import {getConfig} from 'mattermost-redux/selectors/entities/general';
 import {getCurrentTeamId} from 'mattermost-redux/selectors/entities/teams';
 import {
+    getCurrentUser,
     getCurrentUserId,
     getUserIdsInChannels,
     getUser,
     searchProfiles,
 } from 'mattermost-redux/selectors/entities/users';
 import * as ChannelActions from 'mattermost-redux/actions/channels';
+import {logError} from 'mattermost-redux/actions/errors';
 
 import {sortChannelsByTypeAndDisplayName} from 'mattermost-redux/utils/channel_utils';
 
@@ -31,12 +33,10 @@ import DraftIcon from 'components/svg/draft_icon';
 import GlobeIcon from 'components/svg/globe_icon';
 import LockIcon from 'components/svg/lock_icon';
 import ArchiveIcon from 'components/svg/archive_icon';
-import AppDispatcher from 'dispatcher/app_dispatcher.jsx';
 import {getPostDraft} from 'selectors/rhs';
 import store from 'stores/redux_store.jsx';
-import {ActionTypes, Constants, StoragePrefixes} from 'utils/constants.jsx';
+import {Constants, StoragePrefixes} from 'utils/constants.jsx';
 import * as Utils from 'utils/utils.jsx';
-import UserStore from 'stores/user_store.jsx';
 
 import Provider from './provider.jsx';
 import Suggestion from './suggestion.jsx';
@@ -48,7 +48,7 @@ function getChannelDisplayName(channel) {
         return channel.display_name;
     }
 
-    const currentUser = UserStore.getCurrentUser();
+    const currentUser = getCurrentUser(getState());
 
     if (currentUser) {
         return channel.display_name.
@@ -237,26 +237,26 @@ function makeChannelSearchFilter(channelPrefix) {
 }
 
 export default class SwitchChannelProvider extends Provider {
-    handlePretextChanged(suggestionId, channelPrefix) {
+    handlePretextChanged(channelPrefix, resultsCallback) {
         if (channelPrefix) {
             prefix = channelPrefix;
-            this.startNewRequest(suggestionId, channelPrefix);
+            this.startNewRequest(channelPrefix);
 
             // Dispatch suggestions for local data
             const channels = getChannelsInCurrentTeam(getState()).concat(getDirectAndGroupChannels(getState()));
             const users = Object.assign([], searchProfiles(getState(), channelPrefix, false));
-            this.formatChannelsAndDispatch(channelPrefix, suggestionId, channels, users, true);
+            this.formatChannelsAndDispatch(channelPrefix, resultsCallback, channels, users, true);
 
             // Fetch data from the server and dispatch
-            this.fetchUsersAndChannels(channelPrefix, suggestionId);
+            this.fetchUsersAndChannels(channelPrefix, resultsCallback);
         } else {
-            this.formatUnreadChannelsAndDispatch(suggestionId);
+            this.formatUnreadChannelsAndDispatch(resultsCallback);
         }
 
         return true;
     }
 
-    async fetchUsersAndChannels(channelPrefix, suggestionId) {
+    async fetchUsersAndChannels(channelPrefix, resultsCallback) {
         const state = getState();
         const teamId = getCurrentTeamId(state);
         if (!teamId) {
@@ -280,10 +280,7 @@ export default class SwitchChannelProvider extends Provider {
             const {data} = await channelsAsync;
             channelsFromServer = data;
         } catch (err) {
-            AppDispatcher.handleServerAction({
-                type: ActionTypes.RECEIVED_ERROR,
-                err,
-            });
+            store.dispatch(logError(err));
         }
 
         if (this.shouldCancelDispatch(channelPrefix)) {
@@ -298,7 +295,7 @@ export default class SwitchChannelProvider extends Provider {
         });
 
         const channels = getChannelsInCurrentTeam(state).concat(getDirectAndGroupChannels(state)).concat(channelsFromServer);
-        this.formatChannelsAndDispatch(channelPrefix, suggestionId, channels, users);
+        this.formatChannelsAndDispatch(channelPrefix, resultsCallback, channels, users);
     }
 
     userWrappedChannel(user, channel) {
@@ -331,7 +328,7 @@ export default class SwitchChannelProvider extends Provider {
         };
     }
 
-    formatChannelsAndDispatch(channelPrefix, suggestionId, allChannels, users, skipNotInChannel = false) {
+    formatChannelsAndDispatch(channelPrefix, resultsCallback, allChannels, users, skipNotInChannel = false) {
         const channels = [];
 
         const members = getMyChannelMemberships(getState());
@@ -449,19 +446,15 @@ export default class SwitchChannelProvider extends Provider {
             });
         }
 
-        setTimeout(() => {
-            AppDispatcher.handleServerAction({
-                type: ActionTypes.SUGGESTION_RECEIVED_SUGGESTIONS,
-                id: suggestionId,
-                matchedPretext: channelPrefix,
-                terms: channelNames,
-                items: channels,
-                component: ConnectedSwitchChannelSuggestion,
-            });
-        }, 0);
+        resultsCallback({
+            matchedPretext: channelPrefix,
+            terms: channelNames,
+            items: channels,
+            component: ConnectedSwitchChannelSuggestion,
+        });
     }
 
-    formatUnreadChannelsAndDispatch(suggestionId) {
+    formatUnreadChannelsAndDispatch(resultsCallback) {
         const getChannel = makeGetChannel();
 
         const unreadChannelIds = getSortedUnreadChannelIds(getState(), false);
@@ -491,15 +484,11 @@ export default class SwitchChannelProvider extends Provider {
 
         const channelNames = channels.map((wrappedChannel) => wrappedChannel.channel.name);
 
-        setTimeout(() => {
-            AppDispatcher.handleServerAction({
-                type: ActionTypes.SUGGESTION_RECEIVED_SUGGESTIONS,
-                id: suggestionId,
-                matchedPretext: '',
-                terms: channelNames,
-                items: channels,
-                component: ConnectedSwitchChannelSuggestion,
-            });
-        }, 0);
+        resultsCallback({
+            matchedPretext: '',
+            terms: channelNames,
+            items: channels,
+            component: ConnectedSwitchChannelSuggestion,
+        });
     }
 }

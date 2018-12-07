@@ -11,6 +11,7 @@ import {getMyTeams, getJoinableTeamIds, getTeamMemberships, getCurrentTeamId} fr
 
 import {getCurrentLocale} from 'selectors/i18n';
 import {getIsLhsOpen} from 'selectors/lhs';
+import {switchTeam} from 'actions/team_actions.jsx';
 
 import TeamSidebar from './team_sidebar_controller.jsx';
 
@@ -18,7 +19,6 @@ function mapStateToProps(state) {
     const config = getConfig(state);
 
     const experimentalPrimaryTeam = config.ExperimentalPrimaryTeam;
-    const enableTeamCreation = config.EnableTeamCreation === 'true';
     const joinableTeams = getJoinableTeamIds(state);
     const moreTeamsToJoin = joinableTeams && joinableTeams.length > 0;
 
@@ -28,7 +28,6 @@ function mapStateToProps(state) {
         myTeamMembers: getTeamMemberships(state),
         isOpen: getIsLhsOpen(state),
         experimentalPrimaryTeam,
-        enableTeamCreation,
         locale: getCurrentLocale(state),
         moreTeamsToJoin,
     };
@@ -38,6 +37,7 @@ function mapDispatchToProps(dispatch) {
     return {
         actions: bindActionCreators({
             getTeams,
+            switchTeam,
         }, dispatch),
     };
 }

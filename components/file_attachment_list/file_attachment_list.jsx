@@ -43,8 +43,8 @@ export default class FileAttachmentList extends React.Component {
         actions: PropTypes.shape({
 
             /*
-             * Function to get file metadata for a post
-             */
+            * Function to get file metadata for a post
+            */
             getMissingFilesForPost: PropTypes.func.isRequired,
         }).isRequired,
     }
@@ -58,7 +58,7 @@ export default class FileAttachmentList extends React.Component {
     }
 
     componentDidMount() {
-        if (this.props.post.file_ids || this.props.post.filenames) {
+        if ((this.props.post.file_ids || this.props.post.filenames) && !this.props.post.metadata) {
             this.props.actions.getMissingFilesForPost(this.props.post.id);
         }
     }
@@ -88,7 +88,7 @@ export default class FileAttachmentList extends React.Component {
                         <SingleImageView
                             fileInfo={fileInfos[0]}
                             isEmbedVisible={this.props.isEmbedVisible}
-                            post={this.props.post}
+                            postId={this.props.post.id}
                         />
                     );
                 }

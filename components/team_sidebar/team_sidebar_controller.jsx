@@ -24,10 +24,10 @@ export default class TeamSidebar extends React.PureComponent {
         myTeamMembers: PropTypes.object.isRequired,
         isOpen: PropTypes.bool.isRequired,
         experimentalPrimaryTeam: PropTypes.string,
-        enableTeamCreation: PropTypes.bool.isRequired,
         locale: PropTypes.string.isRequired,
         actions: PropTypes.shape({
             getTeams: PropTypes.func.isRequired,
+            switchTeam: PropTypes.func.isRequired,
         }).isRequired,
     }
 
@@ -56,6 +56,7 @@ export default class TeamSidebar extends React.PureComponent {
                         unread={member.msg_count > 0}
                         mentions={member.mention_count}
                         teamIconUrl={Utils.imageURLForTeam(team)}
+                        switchTeam={this.props.actions.switchTeam}
                     />
                 );
             });
@@ -73,9 +74,10 @@ export default class TeamSidebar extends React.PureComponent {
                         />
                     }
                     content={'+'}
+                    switchTeam={this.props.actions.switchTeam}
                 />
             );
-        } else if (this.props.enableTeamCreation) {
+        } else {
             teams.push(
                 <SystemPermissionGate
                     permissions={[Permissions.CREATE_TEAM]}
@@ -91,6 +93,7 @@ export default class TeamSidebar extends React.PureComponent {
                             />
                         }
                         content={'+'}
+                        switchTeam={this.props.actions.switchTeam}
                     />
                 </SystemPermissionGate>
             );

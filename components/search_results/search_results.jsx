@@ -8,8 +8,6 @@ import Scrollbars from 'react-custom-scrollbars';
 
 import {debounce} from 'mattermost-redux/actions/helpers';
 
-import WebrtcStore from 'stores/webrtc_store.jsx';
-
 import Constants from 'utils/constants.jsx';
 import * as Utils from 'utils/utils.jsx';
 
@@ -50,12 +48,8 @@ export default class SearchResults extends React.PureComponent {
     static propTypes = {
         results: PropTypes.array,
         matches: PropTypes.object,
-        profiles: PropTypes.object,
-        statuses: PropTypes.object,
         currentUser: PropTypes.object,
-        channels: PropTypes.object,
         searchTerms: PropTypes.string,
-        isFlaggedByPostId: PropTypes.object,
         isSearchingTerm: PropTypes.bool,
         isSearchingFlaggedPost: PropTypes.bool,
         isSearchingPinnedPost: PropTypes.bool,
@@ -83,20 +77,15 @@ export default class SearchResults extends React.PureComponent {
         this.state = {
             windowWidth: Utils.windowWidth(),
             windowHeight: Utils.windowHeight(),
-            isBusy: WebrtcStore.isBusy(),
         };
     }
 
     componentDidMount() {
-        WebrtcStore.addBusyListener(this.onBusy);
-
         this.scrollToTop();
         window.addEventListener('resize', this.handleResize);
     }
 
     componentWillUnmount() {
-        WebrtcStore.removeBusyListener(this.onBusy);
-
         window.removeEventListener('resize', this.handleResize);
     }
 
@@ -111,10 +100,6 @@ export default class SearchResults extends React.PureComponent {
             windowWidth: Utils.windowWidth(),
             windowHeight: Utils.windowHeight(),
         });
-    }
-
-    onBusy = (isBusy) => {
-        this.setState({isBusy});
     }
 
     scrollToTop = () => {
@@ -140,8 +125,6 @@ export default class SearchResults extends React.PureComponent {
         const results = this.props.results;
         const noResults = (!results || results.length === 0);
         const searchTerms = this.props.searchTerms;
-        const profiles = this.props.profiles || {};
-        const statuses = this.props.statuses || {};
 
         let ctls = null;
 
@@ -207,39 +190,17 @@ export default class SearchResults extends React.PureComponent {
             }
 
             ctls = sortedResults.map((post, idx, arr) => {
-                let profile;
-                if (this.props.currentUser.id === post.user_id) {
-                    profile = this.props.currentUser;
-                } else {
-                    profile = profiles[post.user_id];
-                }
-
-                let status = 'offline';
-                if (statuses) {
-                    status = statuses[post.user_id] || 'offline';
-                }
-
-                let isFlagged = false;
-                if (this.props.isFlaggedByPostId) {
-                    isFlagged = this.props.isFlaggedByPostId.get(post.id) || false;
-                }
-
                 const reverseCount = arr.length - idx - 1;
 
                 return (
                     <SearchResultsItem
                         key={post.id}
-                        channel={this.props.channels.get(post.channel_id)}
                         compactDisplay={this.props.compactDisplay}
                         post={post}
                         matches={this.props.matches[post.id]}
                         lastPostCount={(reverseCount >= 0 && reverseCount < Constants.TEST_ID_COUNT) ? reverseCount : -1}
-                        user={profile}
                         term={(!this.props.isFlaggedPosts && !this.props.isPinnedPosts && !this.props.isMentionSearch) ? searchTerms : ''}
                         isMentionSearch={this.props.isMentionSearch}
-                        isFlagged={isFlagged}
-                        isBusy={this.state.isBusy}
-                        status={status}
                     />
                 );
             }, this);

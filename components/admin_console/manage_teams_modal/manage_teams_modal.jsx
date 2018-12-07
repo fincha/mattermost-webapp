@@ -7,8 +7,6 @@ import {Modal} from 'react-bootstrap';
 import {FormattedMessage} from 'react-intl';
 import {Client4} from 'mattermost-redux/client';
 
-import * as TeamActions from 'actions/team_actions.jsx';
-
 import {filterAndSortTeamsByDisplayName} from 'utils/team_utils.jsx';
 import * as Utils from 'utils/utils.jsx';
 import LoadingScreen from 'components/loading_screen.jsx';
@@ -22,7 +20,12 @@ export default class ManageTeamsModal extends React.Component {
         onModalDismissed: PropTypes.func.isRequired,
         show: PropTypes.bool.isRequired,
         user: PropTypes.object,
-        updateTeamMemberSchemeRoles: PropTypes.func.isRequired,
+        actions: PropTypes.shape({
+            getTeamMembersForUser: PropTypes.func.isRequired,
+            getTeamsForUser: PropTypes.func.isRequired,
+            updateTeamMemberSchemeRoles: PropTypes.func.isRequired,
+            removeUserFromTeam: PropTypes.func.isRequired,
+        }).isRequired,
     };
 
     constructor(props) {
@@ -57,17 +60,11 @@ export default class ManageTeamsModal extends React.Component {
         }
     }
 
-    loadTeamsAndTeamMembers = (user = this.props.user) => {
-        TeamActions.getTeamsForUser(user.id, (teams) => {
-            this.setState({
-                teams: filterAndSortTeamsByDisplayName(teams, this.props.locale),
-            });
-        });
-
-        TeamActions.getTeamMembersForUser(user.id, (teamMembers) => {
-            this.setState({
-                teamMembers,
-            });
+    loadTeamsAndTeamMembers = async (user = this.props.user) => {
+        this.getTeamMembers(user.id);
+        const {data} = await this.props.actions.getTeamsForUser(user.id);
+        this.setState({
+            teams: filterAndSortTeamsByDisplayName(data, this.props.locale),
         });
     }
 
@@ -77,12 +74,13 @@ export default class ManageTeamsModal extends React.Component {
         });
     }
 
-    handleMemberChange = () => {
-        TeamActions.getTeamMembersForUser(this.props.user.id, (teamMembers) => {
+    getTeamMembers = async (userId = this.props.user.id) => {
+        const {data} = await this.props.actions.getTeamMembersForUser(userId);
+        if (data) {
             this.setState({
-                teamMembers,
+                teamMembers: data,
             });
-        });
+        }
     }
 
     handleMemberRemove = (teamId) => {
@@ -90,6 +88,17 @@ export default class ManageTeamsModal extends React.Component {
             teams: this.state.teams.filter((team) => team.id !== teamId),
             teamMembers: this.state.teamMembers.filter((teamMember) => teamMember.team_id !== teamId),
         });
+    }
+
+    handleRemoveUserFromTeam = async (teamId) => {
+        const {actions, user} = this.props;
+
+        const {data, error} = await actions.removeUserFromTeam(teamId, user.id);
+        if (data) {
+            this.handleMemberRemove(teamId);
+        } else if (error) {
+            this.handleError(error.message);
+        }
     }
 
     renderContents = () => {
@@ -121,10 +130,8 @@ export default class ManageTeamsModal extends React.Component {
                 if (isSystemAdmin) {
                     action = (
                         <RemoveFromTeamButton
-                            user={user}
-                            team={team}
-                            onError={this.handleError}
-                            onMemberRemove={this.handleMemberRemove}
+                            teamId={team.id}
+                            handleRemoveUserFromTeam={this.handleRemoveUserFromTeam}
                         />
                     );
                 } else {
@@ -134,9 +141,9 @@ export default class ManageTeamsModal extends React.Component {
                             team={team}
                             teamMember={teamMember}
                             onError={this.handleError}
-                            onMemberChange={this.handleMemberChange}
-                            onMemberRemove={this.handleMemberRemove}
-                            updateTeamMemberSchemeRoles={this.props.updateTeamMemberSchemeRoles}
+                            onMemberChange={this.getTeamMembers}
+                            updateTeamMemberSchemeRoles={this.props.actions.updateTeamMemberSchemeRoles}
+                            handleRemoveUserFromTeam={this.handleRemoveUserFromTeam}
                         />
                     );
                 }

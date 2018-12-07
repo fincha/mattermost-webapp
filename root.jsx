@@ -5,9 +5,10 @@ import './entry.js';
 
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { Provider } from 'react-redux';
-import { Router, Route } from 'react-router-dom';
-import { getConfig } from 'mattermost-redux/selectors/entities/general';
+import {Provider} from 'react-redux';
+import {Router, Route} from 'react-router-dom';
+import {getConfig} from 'mattermost-redux/selectors/entities/general';
+import {logError} from 'mattermost-redux/actions/errors';
 import PDFJS from 'pdfjs-dist';
 
 // Import our styles
@@ -15,8 +16,8 @@ import 'bootstrap-colorpicker/dist/css/bootstrap-colorpicker.css';
 import 'sass/styles.scss';
 import 'katex/dist/katex.min.css';
 
-import { browserHistory } from 'utils/browser_history';
-import { makeAsyncComponent } from 'components/async_load';
+import {browserHistory} from 'utils/browser_history';
+import {makeAsyncComponent} from 'components/async_load';
 import store from 'stores/redux_store.jsx';
 import loadRoot from 'bundle-loader?lazy!components/root';
 
@@ -43,16 +44,20 @@ function preRenderSetup(callwhendone) {
         const state = store.getState();
         const config = getConfig(state);
         if (config.EnableDeveloper === 'true') {
-            window.ErrorStore.storeLastError({
-                type: 'developer',
-                message:
-                    'DEVELOPER MODE: A JavaScript error has occurred.  Please use the JavaScript console to capture and report the error (row: ' +
-                    line +
-                    ' col: ' +
-                    column +
-                    ').',
-            });
-            window.ErrorStore.emitChange();
+            store.dispatch(
+                logError(
+                    {
+                        type: 'developer',
+                        message:
+                            'DEVELOPER MODE: A JavaScript error has occurred.  Please use the JavaScript console to capture and report the error (row: ' +
+                            line +
+                            ' col: ' +
+                            column +
+                            ').',
+                    },
+                    true
+                )
+            );
         }
     };
     callwhendone();

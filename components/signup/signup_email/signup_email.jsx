@@ -10,9 +10,6 @@ import {isEmail} from 'mattermost-redux/utils/helpers';
 
 import {trackEvent} from 'actions/diagnostics_actions.jsx';
 import * as GlobalActions from 'actions/global_actions.jsx';
-import {getInviteInfo} from 'actions/team_actions.jsx';
-import {createUserWithInvite, loginById} from 'actions/user_actions.jsx';
-
 import {browserHistory} from 'utils/browser_history';
 import Constants from 'utils/constants.jsx';
 import * as Utils from 'utils/utils.jsx';
@@ -35,126 +32,104 @@ export default class SignupEmail extends React.Component {
         customDescriptionText: PropTypes.string,
         passwordConfig: PropTypes.object,
         actions: PropTypes.shape({
+            createUser: PropTypes.func.isRequired,
+            loginById: PropTypes.func.isRequired,
             setGlobalItem: PropTypes.func.isRequired,
+            getTeamInviteInfo: PropTypes.func.isRequired,
         }).isRequired,
     }
 
     constructor(props) {
         super(props);
 
-        this.handleSubmit = this.handleSubmit.bind(this);
+        const data = (new URLSearchParams(this.props.location.search)).get('d');
+        const token = (new URLSearchParams(this.props.location.search)).get('t');
+        const inviteId = (new URLSearchParams(this.props.location.search)).get('id');
 
-        this.getInviteInfo = this.getInviteInfo.bind(this);
-        this.renderEmailSignup = this.renderEmailSignup.bind(this);
-        this.isUserValid = this.isUserValid.bind(this);
-
-        this.state = this.getInviteInfo();
+        this.state = {};
+        if (token && token.length > 0) {
+            this.state = this.getTokenData(token, data);
+        } else if (inviteId && inviteId.length > 0) {
+            this.state = {
+                loading: true,
+                inviteId,
+            };
+        }
     }
 
     componentDidMount() {
         trackEvent('signup', 'signup_user_01_welcome');
+
+        const {inviteId} = this.state;
+        if (inviteId && inviteId.length > 0) {
+            this.getInviteInfo(inviteId);
+        }
     }
 
-    getInviteInfo() {
-        let data = (new URLSearchParams(this.props.location.search)).get('d');
-        let token = (new URLSearchParams(this.props.location.search)).get('t');
-        const inviteId = (new URLSearchParams(this.props.location.search)).get('id');
-        let email = '';
-        let teamDisplayName = '';
-        let teamName = '';
-        let teamId = '';
-        let loading = false;
-        const serverError = '';
-        const noOpenServerError = false;
-
-        if (token && token.length > 0) {
-            const parsedData = JSON.parse(data);
-            email = parsedData.email;
-            teamDisplayName = parsedData.display_name;
-            teamName = parsedData.name;
-            teamId = parsedData.id;
-        } else if (inviteId && inviteId.length > 0) {
-            loading = true;
-            getInviteInfo(
-                inviteId,
-                (inviteData) => {
-                    if (!inviteData) {
-                        this.setState({loading: false});
-                        return;
-                    }
-
-                    this.setState({
-                        loading: false,
-                        serverError: '',
-                        teamDisplayName: inviteData.display_name,
-                        teamName: inviteData.name,
-                        teamId: inviteData.id,
-                    });
-                },
-                () => {
-                    this.setState({
-                        loading: false,
-                        noOpenServerError: true,
-                        serverError: (
-                            <FormattedMessage
-                                id='signup_user_completed.invalid_invite'
-                                defaultMessage='The invite link was invalid.  Please speak with your Administrator to receive an invitation.'
-                            />
-                        ),
-                    });
-                }
-            );
-
-            data = null;
-            token = null;
-        }
+    getTokenData = (token, data) => {
+        const parsedData = JSON.parse(data);
 
         return {
-            data,
+            loading: false,
             token,
-            email,
-            teamDisplayName,
-            teamName,
-            teamId,
-            inviteId,
-            loading,
-            serverError,
-            noOpenServerError,
+            email: parsedData.email,
+            teamName: parsedData.name,
         };
     }
 
-    handleSignupSuccess(user, data) {
-        trackEvent('signup', 'signup_user_02_complete');
-        loginById(
-            data.id,
-            user.password,
-            '',
-            () => {
-                if (this.state.token > 0) {
-                    this.props.actions.setGlobalItem(this.state.token, JSON.stringify({usedBefore: true}));
-                }
+    getInviteInfo = async (inviteId) => {
+        const {data, error} = await this.props.actions.getTeamInviteInfo(inviteId);
+        if (data) {
+            this.setState({
+                loading: false,
+                noOpenServerError: false,
+                serverError: '',
+                teamName: data.name,
+            });
+        } else if (error) {
+            this.setState({loading: false,
+                noOpenServerError: true,
+                serverError: (
+                    <FormattedMessage
+                        id='signup_user_completed.invalid_invite'
+                        defaultMessage='The invite link was invalid.  Please speak with your Administrator to receive an invitation.'
+                    />
+                ),
+            });
+        }
+    }
 
-                const redirectTo = (new URLSearchParams(this.props.location.search)).get('redirect_to');
-                if (redirectTo) {
-                    browserHistory.push(redirectTo);
-                } else {
-                    GlobalActions.redirectUserToDefaultTeam();
-                }
-            },
-            (err) => {
-                if (err.id === 'api.user.login.not_verified.app_error') {
+    handleSignupSuccess = (user, data) => {
+        trackEvent('signup', 'signup_user_02_complete');
+
+        this.props.actions.loginById(data.id, user.password, '').then(({error}) => {
+            if (error) {
+                if (error.server_error_id === 'api.user.login.not_verified.app_error') {
                     browserHistory.push('/should_verify_email?email=' + encodeURIComponent(user.email) + '&teamname=' + encodeURIComponent(this.state.teamName));
                 } else {
                     this.setState({
-                        serverError: err.message,
+                        serverError: error.message,
                         isSubmitting: false,
                     });
                 }
+
+                return;
             }
-        );
+
+            if (this.state.token > 0) {
+                this.props.actions.setGlobalItem(this.state.token, JSON.stringify({usedBefore: true}));
+            }
+
+            const redirectTo = (new URLSearchParams(this.props.location.search)).get('redirect_to');
+            if (redirectTo) {
+                browserHistory.push(redirectTo);
+            } else {
+                GlobalActions.redirectUserToDefaultTeam();
+            }
+        });
     }
 
-    isUserValid() {
+    isUserValid = () => {
         const providedEmail = this.refs.email.value.trim();
         if (!providedEmail) {
             this.setState({
@@ -229,7 +204,7 @@ export default class SignupEmail extends React.Component {
         return true;
     }
 
-    handleSubmit(e) {
+    handleSubmit = (e) => {
         e.preventDefault();
 
         // bail out if a submission is already in progress
@@ -253,24 +228,27 @@ export default class SignupEmail extends React.Component {
                 allow_marketing: true,
             };
 
-            createUserWithInvite(user,
-                this.state.token,
-                this.state.inviteId,
-                this.handleSignupSuccess.bind(this, user),
-                (err) => {
+            this.props.actions.createUser(user, this.state.token, this.state.inviteId).then((result) => {
+                if (result.error) {
                     this.setState({
-                        serverError: err.message,
+                        serverError: result.error.message,
                         isSubmitting: false,
                     });
+                    return;
                 }
-            );
+
+                this.handleSignupSuccess(user, result.data);
+            });
         }
     }
 
-    renderEmailSignup() {
+    renderEmailSignup = () => {
         let emailError = null;
         let emailHelpText = (
-            <span className='help-block'>
+            <span
+                id='valid_email'
+                className='help-block'
+            >
                 <FormattedMessage
                     id='signup_user_completed.emailHelp'
                     defaultMessage='Valid email required for sign-up'
@@ -286,7 +264,10 @@ export default class SignupEmail extends React.Component {
 
         let nameError = null;
         let nameHelpText = (
-            <span className='help-block'>
+            <span
+                id='valid_name'
+                className='help-block'
+            >
                 <FormattedMessage
                     id='signup_user_completed.userHelp'
                     defaultMessage="Username must begin with a letter, and contain between {min} to {max} lowercase characters made up of numbers, letters, and the symbols '.', '-' and '_'"
@@ -334,12 +315,14 @@ export default class SignupEmail extends React.Component {
             <form>
                 <div className='inner__content'>
                     <div className={emailContainerStyle}>
-                        <h5><strong>
-                            <FormattedMessage
-                                id='signup_user_completed.whatis'
-                                defaultMessage="What's your email address?"
-                            />
-                        </strong></h5>
+                        <h5 id='email_label'>
+                            <strong>
+                                <FormattedMessage
+                                    id='signup_user_completed.whatis'
+                                    defaultMessage="What's your email address?"
+                                />
+                            </strong>
+                        </h5>
                         <div className={emailDivStyle}>
                             <input
                                 id='email'
@@ -359,12 +342,14 @@ export default class SignupEmail extends React.Component {
                     </div>
                     {yourEmailIs}
                     <div className='margin--extra'>
-                        <h5><strong>
-                            <FormattedMessage
-                                id='signup_user_completed.chooseUser'
-                                defaultMessage='Choose your username'
-                            />
-                        </strong></h5>
+                        <h5 id='name_label'>
+                            <strong>
+                                <FormattedMessage
+                                    id='signup_user_completed.chooseUser'
+                                    defaultMessage='Choose your username'
+                                />
+                            </strong>
+                        </h5>
                         <div className={nameDivStyle}>
                             <input
                                 id='name'
@@ -381,12 +366,14 @@ export default class SignupEmail extends React.Component {
                         </div>
                     </div>
                     <div className='margin--extra'>
-                        <h5><strong>
-                            <FormattedMessage
-                                id='signup_user_completed.choosePwd'
-                                defaultMessage='Choose your password'
-                            />
-                        </strong></h5>
+                        <h5 id='password_label'>
+                            <strong>
+                                <FormattedMessage
+                                    id='signup_user_completed.choosePwd'
+                                    defaultMessage='Choose your password'
+                                />
+                            </strong>
+                        </h5>
                         <div className={passwordDivStyle}>
                             <input
                                 id='password'
@@ -452,7 +439,7 @@ export default class SignupEmail extends React.Component {
         let terms = null;
         if (!this.state.noOpenServerError && emailSignup) {
             terms = (
-                <p>
+                <p id='signup_agreement'>
                     <FormattedMarkdownMessage
                         id='create_team.agreement'
                         defaultMessage='By proceeding to create your account and use {siteName}, you agree to our [Terms of Service]({TermsOfServiceLink}) and [Privacy Policy]({PrivacyPolicyLink}). If you do not agree, you cannot use {siteName}.'
@@ -473,7 +460,10 @@ export default class SignupEmail extends React.Component {
         return (
             <div>
                 <BackButton/>
-                <div className='col-sm-12'>
+                <div
+                    id='signup_email_section'
+                    className='col-sm-12'
+                >
                     <div className='signup-team__container padding--less'>
                         <img
                             className='signup-team-logo'
@@ -483,19 +473,26 @@ export default class SignupEmail extends React.Component {
                             customDescriptionText={customDescriptionText}
                             siteName={siteName}
                         />
-                        <h4 className='color--light'>
+                        <h4
+                            id='create_account'
+                            className='color--light'
+                        >
                             <FormattedMessage
                                 id='signup_user_completed.lets'
                                 defaultMessage="Let's create your account"
                             />
                         </h4>
-                        <span className='color--light'>
+                        <span
+                            id='signin_account'
+                            className='color--light'
+                        >
                             <FormattedMessage
                                 id='signup_user_completed.haveAccount'
                                 defaultMessage='Already have an account?'
                             />
                             {' '}
                             <Link
+                                id='signin_account_link'
                                 to={'/login' + location.search}
                             >
                                 <FormattedMessage
